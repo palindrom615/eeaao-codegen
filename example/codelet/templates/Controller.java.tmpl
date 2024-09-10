@@ -1,0 +1,8 @@
+public class {{.Name}}Controller {
+{{- range .paths }}
+    @RequestMapping(value = "{{.path}}", method = RequestMethod.{{.method}})
+    public ResponseEntity<{{.responseType}}> {{.name}}({{.requestType}} request) {
+        return ResponseEntity.ok({{.name}}Service.{{.name}}(request));
+    }
+{{- end }}
+}
