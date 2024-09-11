@@ -1,3 +1,5 @@
-{{- range $path, $props := .Paths.Paths -}}
+{{ range $schema := loadSpecsGlob "openapi" "*.json" }}
+{{- range $path, $props := $schema.Paths.Paths -}}
     {{- $path -}} - {{- $props.Get }}
+{{ end -}}
 {{ end -}}

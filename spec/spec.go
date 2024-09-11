@@ -8,19 +8,18 @@ import (
 type Spec any
 
 type SpecDir struct {
-	Dir    string
-	Plugin plugin.Plugin
+	Dir string
 }
 
-func (s SpecDir) LoadSpecsGlob(glob string) []Spec {
-	p := filepath.Join(s.Dir, glob)
-	matches, err := filepath.Glob(p)
+func (s SpecDir) LoadSpecsGlob(pluginName string, glob string) []Spec {
+	p := plugin.Plugins[pluginName]
+	matches, err := filepath.Glob(filepath.Join(s.Dir, glob))
 	if err != nil {
 		return nil
 	}
-	res := []Spec{}
+	var res []Spec
 	for _, match := range matches {
-		if doc := s.Plugin.LoadSpecFile(match); doc != nil {
+		if doc := p.LoadSpecFile(match); doc != nil {
 			res = append(res, doc)
 		}
 	}

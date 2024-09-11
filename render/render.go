@@ -2,7 +2,6 @@ package render
 
 import (
 	"fmt"
-	"github.com/palindrom615/eeaao-codegen/plugin"
 	spec2 "github.com/palindrom615/eeaao-codegen/spec"
 	"os"
 	"path/filepath"
@@ -12,9 +11,8 @@ import (
 func Render(specDir string, codeletDir string, outDir string) {
 	// Read JSON specFile
 
-	s := spec2.SpecDir{specDir, plugin.OpenApiPlugin{}}
+	s := spec2.SpecDir{Dir: specDir}
 
-	spec := s.LoadSpecsGlob("*.json")
 	// Iterate over templates in codeletDir
 	err := filepath.Walk(codeletDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -28,7 +26,14 @@ func Render(specDir string, codeletDir string, outDir string) {
 			}
 
 			// Parse template
-			tmpl, err := template.New(filepath.Base(path)).Parse(string(tmplData))
+			tmpl := template.New(filepath.Base(path))
+			tmpl.Funcs(
+				template.FuncMap{
+					"loadSpecsGlob": s.LoadSpecsGlob,
+				},
+			)
+
+			tmpl, err = tmpl.Parse(string(tmplData))
 			if err != nil {
 				return err
 			}
@@ -42,7 +47,7 @@ func Render(specDir string, codeletDir string, outDir string) {
 			defer outFile.Close()
 
 			// Render template with spec data
-			err = tmpl.Execute(outFile, spec[0])
+			err = tmpl.Execute(outFile, struct{}{})
 			if err != nil {
 				return err
 			}
