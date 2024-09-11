@@ -8,8 +8,12 @@ type Plugin interface {
 
 type PluginMap map[string]Plugin
 
-var Plugins = PluginMap{}
+var plugins = PluginMap{}
 
 func init() {
-	Plugins["openapi"] = OpenApiPlugin{}
+	plugins["openapi"] = OpenApiPlugin{}
+}
+
+func GetPlugin(pluginName string) Plugin {
+	return plugins[pluginName]
 }
