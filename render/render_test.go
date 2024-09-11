@@ -6,5 +6,5 @@ import (
 )
 
 func TestRender(t *testing.T) {
-	render.Render("../example/spec/petstore.json", "../example/codelet", "../example/build")
+	render.Render("../example/spec", "../example/codelet", "../example/build")
 }

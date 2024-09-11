@@ -1,1 +1,3 @@
-{{ $.swagger }}
+{{- range $path, $props := .Paths.Paths -}}
+    {{- $path -}} - {{- $props.Get }}
+{{ end -}}
