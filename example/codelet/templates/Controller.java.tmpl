@@ -1,4 +1,6 @@
-public class {{.Name}}Controller {
+
+
+public class {{title .Name}}Controller {
 {{- range .paths }}
     @RequestMapping(value = "{{.path}}", method = RequestMethod.{{.method}})
     public ResponseEntity<{{.responseType}}> {{.name}}({{.requestType}} request) {

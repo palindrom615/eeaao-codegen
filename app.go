@@ -19,10 +19,10 @@ func (a *App) renderFile(filePath string, templatePath string, data any) string 
 	if err != nil {
 		panic(err)
 	}
+	// TODO deny access to files outside of the codelet directory
 	tmplStr, err := os.ReadFile(filepath.Join(a.CodeletDir, "templates", templatePath))
 	tmpl := template.New(filepath.Base(filepath.Join(a.CodeletDir, "templates", templatePath)))
 	tmpl.Parse(string(tmplStr))
-
 	tmpl.Execute(dstFile, data)
 
 	return dst
