@@ -1,7 +1,9 @@
 package eeaao_codegen
 
 import (
+	"github.com/Masterminds/sprig"
 	"log"
+	"maps"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -15,12 +17,12 @@ func Render(c *App) string {
 	// render `render.tmpl` with spec data
 	tmplData, err := os.ReadFile(filepath.Join(c.CodeletDir, "render.tmpl"))
 	tmpl := template.New("render.tmpl")
-	tmpl.Funcs(
-		template.FuncMap{
-			"loadSpecsGlob": c.LoadSpecsGlob,
-			"renderFile":    c.renderFile,
-		},
-	)
+	funcmap := template.FuncMap{
+		"loadSpecsGlob": c.LoadSpecsGlob,
+		"renderFile":    c.renderFile,
+	}
+	maps.Copy(funcmap, sprig.FuncMap())
+	tmpl.Funcs(funcmap)
 
 	tmpl, err = tmpl.Parse(string(tmplData))
 	if err != nil {
