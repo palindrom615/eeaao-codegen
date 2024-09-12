@@ -1,39 +1,39 @@
-package render
+package eeaao_codegen
 
 import (
-	spec2 "github.com/palindrom615/eeaao-codegen/spec"
 	"log"
 	"os"
 	"path/filepath"
 	"text/template"
 )
 
-func Render(c *Config) {
+func Render(c *App) string {
 	// Read JSON specFile
 
-	s := spec2.SpecDir{Dir: specDir}
+	os.Mkdir(c.OutDir, os.ModePerm)
 
 	// render `render.tmpl` with spec data
-	tmplData, err := os.ReadFile(filepath.Join(codeletDir, "render.tmpl"))
+	tmplData, err := os.ReadFile(filepath.Join(c.CodeletDir, "render.tmpl"))
 	tmpl := template.New("render.tmpl")
 	tmpl.Funcs(
 		template.FuncMap{
-			"loadSpecsGlob": s.LoadSpecsGlob,
+			"loadSpecsGlob": c.LoadSpecsGlob,
+			"renderFile":    c.renderFile,
 		},
 	)
 
 	tmpl, err = tmpl.Parse(string(tmplData))
 	if err != nil {
 		log.Fatal(err)
-		return
+		return ""
 	}
 
 	// Create output file
-	outFilePath := filepath.Join(outDir, info.Name())
+	outFilePath := filepath.Join(c.OutDir, "render")
 	outFile, err := os.Create(outFilePath)
 	if err != nil {
 		log.Fatal(err)
-		return
+		return ""
 	}
 	defer outFile.Close()
 
@@ -41,6 +41,8 @@ func Render(c *Config) {
 	err = tmpl.Execute(outFile, struct{}{})
 	if err != nil {
 		log.Fatal(err)
-		return
+		return ""
 	}
+
+	return outFilePath
 }
