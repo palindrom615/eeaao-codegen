@@ -10,7 +10,7 @@ func TestRender(t *testing.T) {
 		"./example/spec",
 		"./example/build",
 		"./example/codelet",
-		"",
+		"./example/config.yaml",
 	)
 	a.Render()
 }

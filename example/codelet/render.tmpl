@@ -1,11 +1,6 @@
 {{ range $schema := loadSpecsGlob "openapi" "*.json" }}
-{{- range $tag := $schema.Tags -}}
-{{- $filename := (print (title $tag.Name) "Controller.java") -}}
-    {{ renderFile $filename "Controller.java.tmpl" $tag }}
-{{ end -}}
-{{- range $path, $props := $schema.Paths.Paths -}}
-    {{- $path -}} - {{- $props.Get }}
-{{ end -}}
+    {{ renderFile "api.lua" "api.lua.tmpl" $schema }}
+    {{ renderFile "partial_header.lua" "partial_header.tmpl" $schema }}
 {{ end -}}
 
 
