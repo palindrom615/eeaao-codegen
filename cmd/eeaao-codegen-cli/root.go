@@ -11,19 +11,15 @@ var (
 	specdir    string
 	codeletdir string
 	outdir     string
+	configFile string
 )
 var rootCmd = &cobra.Command{
-	Use:   "hugo",
-	Short: "Hugo is a very fast static site generator",
-	Long: `A Fast and Flexible Static Site Generator built with
-                love by spf13 and friends in Go.
-                Complete documentation is available at http://hugo.spf13.com`,
+	Use:   "eeaao-codegen-cli",
+	Short: "anything code generator",
+	Long: `anything code generator.
+		You can generate anything from anything with this tool.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := &eeaao_codegen.App{
-			SpecDir:    specdir,
-			CodeletDir: codeletdir,
-			OutDir:     outdir,
-		}
+		app := eeaao_codegen.NewApp(specdir, outdir, codeletdir, configFile)
 		eeaao_codegen.Render(app)
 	},
 }
@@ -32,6 +28,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&specdir, "specdir", "", "Directory for specifications")
 	rootCmd.PersistentFlags().StringVar(&codeletdir, "codeletdir", "", "Directory for templates")
 	rootCmd.PersistentFlags().StringVar(&outdir, "outdir", "", "Directory for output")
+	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.hugo.yaml)")
 
 	rootCmd.MarkPersistentFlagRequired("specdir")
 	rootCmd.MarkPersistentFlagRequired("codeletdir")

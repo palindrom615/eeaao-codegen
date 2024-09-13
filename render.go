@@ -20,6 +20,7 @@ func Render(c *App) string {
 	funcmap := template.FuncMap{
 		"loadSpecsGlob": c.LoadSpecsGlob,
 		"renderFile":    c.renderFile,
+		"withConfig":    func() map[string]any { return c.Conf },
 	}
 	maps.Copy(funcmap, sprig.FuncMap())
 	tmpl.Funcs(funcmap)
