@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 		You can generate anything from anything with this tool.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app := eeaao_codegen.NewApp(specdir, outdir, codeletdir, configFile)
-		eeaao_codegen.Render(app)
+		app.Render()
 	},
 }
 
