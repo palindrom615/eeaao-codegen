@@ -2,60 +2,37 @@ package eeaao_codegen
 
 import (
 	"encoding/json"
-	"github.com/Masterminds/sprig"
-	"github.com/palindrom615/eeaao-codegen/plugin"
 	"gopkg.in/yaml.v3"
 	"log"
-	"maps"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
 type App struct {
-	SpecDir    string
+	specDir    string
 	OutDir     string
 	CodeletDir string
 	Conf       map[string]any
+	tmpl       *template.Template
 }
 
+// NewApp creates a new App instance
+// specDir: directory for specifications
+// outDir: directory for output
+// codeletDir: directory for templates
+// configFile: config file. if empty, config is ""
 func NewApp(specDir string, outDir string, codeletDir string, configFile string) *App {
 	conf := readConf(configFile)
-	return &App{
-		SpecDir:    specDir,
+	app := &App{
+		specDir:    specDir,
 		OutDir:     outDir,
 		CodeletDir: codeletDir,
 		Conf:       conf,
 	}
-}
-
-func (a *App) renderFile(filePath string, templatePath string, data any) string {
-	dst := filepath.Join(a.OutDir, filePath)
-	dstFile, err := os.Create(dst)
-	if err != nil {
-		panic(err)
-	}
-	// TODO deny access to files outside of the codelet directory
-	tmplStr, err := os.ReadFile(filepath.Join(a.CodeletDir, "templates", templatePath))
-	tmpl := template.New(filepath.Base(filepath.Join(a.CodeletDir, "templates", templatePath)))
-	tmpl.Parse(string(tmplStr))
-	tmpl.Execute(dstFile, data)
-
-	return dst
-}
-
-func (a *App) loadSpecsGlob(pluginName string, glob string) (res []plugin.SpecData) {
-	p := plugin.GetPlugin(pluginName)
-	matches, err := filepath.Glob(filepath.Join(a.SpecDir, glob))
-	if err != nil {
-		return nil
-	}
-	for _, match := range matches {
-		if doc := p.LoadSpecFile(match); doc != nil {
-			res = append(res, doc)
-		}
-	}
-	return res
+	app.populateTemplate()
+	return app
 }
 
 func readConf(configFile string) map[string]any {
@@ -65,8 +42,7 @@ func readConf(configFile string) map[string]any {
 	}
 	configData, err := os.ReadFile(configFile)
 	if err != nil {
-		log.Printf("config file not found: %s", configFile)
-
+		log.Printf("config file not found: %s\n%v\n", configFile, err)
 	}
 	ext := filepath.Ext(configFile)
 	if ext == ".json" {
@@ -83,30 +59,24 @@ func readConf(configFile string) map[string]any {
 	return config
 }
 
-func (c *App) Render() string {
-	// Read JSON specFile
-
-	os.Mkdir(c.OutDir, os.ModePerm)
+// Render renders the templates
+func (a *App) Render() string {
+	err := os.MkdirAll(a.OutDir, os.ModePerm)
+	if err != nil {
+		log.Fatalf("Error creating output directory: %v\n", err)
+	}
 
 	// render `render.tmpl` with spec data
-	tmplData, err := os.ReadFile(filepath.Join(c.CodeletDir, "render.tmpl"))
-	tmpl := template.New("render.tmpl")
-	funcmap := template.FuncMap{
-		"loadSpecsGlob": c.loadSpecsGlob,
-		"renderFile":    c.renderFile,
-		"withConfig":    func() map[string]any { return c.Conf },
-	}
-	maps.Copy(funcmap, sprig.FuncMap())
-	tmpl.Funcs(funcmap)
+	tmplData, err := os.ReadFile(filepath.Join(a.CodeletDir, "render.tmpl"))
+	tmpl := a.tmpl.New("../render.tmpl")
 
 	tmpl, err = tmpl.Parse(string(tmplData))
 	if err != nil {
-		log.Fatal(err)
-		return ""
+		log.Fatalf("Error parsing render.tmpl: %v\n", err)
 	}
 
 	// Create output file
-	outFilePath := filepath.Join(c.OutDir, "render")
+	outFilePath := filepath.Join(a.OutDir, "render")
 	outFile, err := os.Create(outFilePath)
 	if err != nil {
 		log.Fatal(err)
@@ -122,4 +92,31 @@ func (c *App) Render() string {
 	}
 
 	return outFilePath
+}
+
+func (a *App) populateTemplate() {
+	a.tmpl = template.New("root")
+	a.tmpl.Funcs(a.makeFuncmap())
+	tmplDir := filepath.Join(a.CodeletDir, "templates")
+
+	filepath.Walk(tmplDir, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		tmplName, found := strings.CutPrefix(path, tmplDir+"/")
+		if !found {
+			log.Fatalf("Error: %s is not in %s\n", path, tmplDir)
+		}
+		tmplText, err := os.ReadFile(path)
+		if err != nil {
+			log.Printf("Error reading template file: %s; ignored\n%v\n", path, err)
+			return nil
+		}
+		_, err = a.tmpl.New(tmplName).Parse(string(tmplText))
+		if err != nil {
+			log.Printf("Error parsing template file: %s; ignored\n%v\n", path, err)
+			return nil
+		}
+		return nil
+	})
 }

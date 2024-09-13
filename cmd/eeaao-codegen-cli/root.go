@@ -27,7 +27,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.PersistentFlags().StringVar(&specdir, "specdir", "", "Directory for specifications")
 	rootCmd.PersistentFlags().StringVar(&codeletdir, "codeletdir", "", "Directory for templates")
-	rootCmd.PersistentFlags().StringVar(&outdir, "outdir", "", "Directory for output")
+	rootCmd.PersistentFlags().StringVar(&outdir, "outdir", "build", "Directory for output")
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.hugo.yaml)")
 
 	rootCmd.MarkPersistentFlagRequired("specdir")

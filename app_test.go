@@ -6,10 +6,11 @@ import (
 )
 
 func TestRender(t *testing.T) {
-	c := &eeaao_codegen.App{
-		SpecDir:    "./example/spec",
-		OutDir:     "./example/build",
-		CodeletDir: "./example/codelet",
-	}
-	eeaao_codegen.Render(c)
+	a := eeaao_codegen.NewApp(
+		"./example/spec",
+		"./example/build",
+		"./example/codelet",
+		"",
+	)
+	a.Render()
 }
