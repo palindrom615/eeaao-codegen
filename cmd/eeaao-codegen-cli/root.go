@@ -28,7 +28,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&specdir, "specdir", "", "Directory for specifications")
 	rootCmd.PersistentFlags().StringVar(&codeletdir, "codeletdir", "", "Directory for templates")
 	rootCmd.PersistentFlags().StringVar(&outdir, "outdir", "build", "Directory for output")
-	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.hugo.yaml)")
+	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file")
 
 	rootCmd.MarkPersistentFlagRequired("specdir")
 	rootCmd.MarkPersistentFlagRequired("codeletdir")
