@@ -2,6 +2,10 @@ package eeaao_codegen
 
 import (
 	"encoding/json"
+	"github.com/palindrom615/eeaao-codegen/codelet"
+	json2 "go.starlark.net/lib/json"
+	"go.starlark.net/lib/math"
+	"go.starlark.net/lib/time"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 	"gopkg.in/yaml.v3"
@@ -72,18 +76,28 @@ func (a *App) Render() {
 	starlarkThread := &starlark.Thread{
 		Name: "main",
 	}
-	starlark.ExecFileOptions(
+	predefined := starlark.StringDict{
+		"eeaao": codelet.ToStarlarkModule(a),
+		"json":  json2.Module,
+		//"proto": proto.Module,
+		"math": math.Module,
+		"time": time.Module,
+	}
+	globals, err := starlark.ExecFileOptions(
 		&syntax.FileOptions{},
 		starlarkThread,
 		filepath.Join(a.CodeletDir, "render.star"),
 		nil,
-		make(starlark.StringDict),
+		predefined,
 	)
+	if err != nil {
+		log.Printf("Error running render.star. globals: %v\n%v\n", globals, err)
+	}
 }
 
 func (a *App) populateTemplate() {
 	a.tmpl = template.New("root")
-	a.tmpl.Funcs(a.makeFuncmap())
+	a.tmpl.Funcs(codelet.ToTemplateFuncmap(a))
 	tmplDir := filepath.Join(a.CodeletDir, "templates")
 
 	filepath.Walk(tmplDir, func(path string, info os.FileInfo, err error) error {

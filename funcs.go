@@ -1,26 +1,14 @@
 package eeaao_codegen
 
 import (
-	"github.com/Masterminds/sprig"
+	"encoding/json"
 	"github.com/palindrom615/eeaao-codegen/plugin"
 	"log"
-	"maps"
 	"os"
 	"path/filepath"
-	"text/template"
 )
 
-func (a *App) makeFuncmap() template.FuncMap {
-	funcmap := template.FuncMap{
-		"loadSpecsGlob": a.loadSpecsGlob,
-		"renderFile":    a.renderFile,
-		"withConfig":    func() map[string]any { return a.Conf },
-	}
-	maps.Copy(funcmap, sprig.FuncMap())
-	return funcmap
-}
-
-func (a *App) renderFile(filePath string, templatePath string, data any) string {
+func (a *App) RenderFile(filePath string, templatePath string, data any) string {
 	if !filepath.IsLocal(filePath) {
 		panic("filePath must be local")
 	}
@@ -34,22 +22,33 @@ func (a *App) renderFile(filePath string, templatePath string, data any) string 
 		panic(err)
 	}
 	a.tmpl.ExecuteTemplate(dstFile, templatePath, data)
-
 	return dst
 }
 
-func (a *App) loadSpecsGlob(pluginName string, glob string) (res []plugin.SpecData) {
+func (a *App) LoadSpecsGlob(pluginName string, glob string) (map[string]string, error) {
 	p := plugin.GetPlugin(pluginName)
 	matches, err := filepath.Glob(filepath.Join(a.specDir, glob))
 	if err != nil {
-		return nil
+		return nil, err
 	}
+	res := make(map[string]string)
 	for _, match := range matches {
 		doc, err := p.LoadSpecFile(match)
 		if err != nil {
 			log.Printf("Error loading spec file '%s': %v\n", match, err)
+			continue
 		}
-		res = append(res, doc)
+		docStr, err := json.Marshal(doc)
+		if err != nil {
+			log.Printf("Error marshaling spec file '%s': %v\n", match, err)
+			continue
+		}
+		p, _ := filepath.Rel(a.specDir, match)
+		res[p] = string(docStr)
 	}
-	return res
+	return res, nil
+}
+
+func (a *App) WithConfig() map[string]any {
+	return a.Conf
 }
