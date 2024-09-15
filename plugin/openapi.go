@@ -8,5 +8,9 @@ type OpenApiPlugin struct {
 }
 
 func (o OpenApiPlugin) LoadSpecFile(path string) (SpecData, error) {
-	return loads.Spec(path)
+	doc, err := loads.Spec(path)
+	if err != nil {
+		return nil, err
+	}
+	return doc.Spec(), nil
 }

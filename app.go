@@ -49,17 +49,18 @@ func readConf(configFile string) map[string]any {
 	configData, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Printf("config file not found: %s\n%v\n", configFile, err)
+		return config
 	}
 	ext := filepath.Ext(configFile)
 	if ext == ".json" {
 		err = json.Unmarshal(configData, &config)
 		if err != nil {
-			panic(err)
+			log.Printf("Error parsing config file: %s\n%v\n", configFile, err)
 		}
 	} else if ext == ".yaml" || ext == ".yml" {
 		err = yaml.Unmarshal(configData, &config)
 		if err != nil {
-			panic(err)
+			log.Printf("Error parsing config file: %s\n%v\n", configFile, err)
 		}
 	}
 	return config
@@ -72,16 +73,14 @@ func (a *App) Render() {
 	if err != nil {
 		log.Fatalf("Error creating output directory: %v\n", err)
 	}
-	// run `render.star` in the CodeletDir
 	starlarkThread := &starlark.Thread{
 		Name: "main",
 	}
 	predefined := starlark.StringDict{
 		"eeaao": codelet.ToStarlarkModule(a),
 		"json":  json2.Module,
-		//"proto": proto.Module,
-		"math": math.Module,
-		"time": time.Module,
+		"math":  math.Module,
+		"time":  time.Module,
 	}
 	globals, err := starlark.ExecFileOptions(
 		&syntax.FileOptions{},
