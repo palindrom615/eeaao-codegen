@@ -1,5 +1,5 @@
 // Package codelet declares the exposed functions for go/template and starlark built-ins.
-package codelet
+package eeaao_codegen
 
 import (
 	"encoding/json"
@@ -15,19 +15,19 @@ import (
 // HelperFuncs defines the helper functions for codelet.
 // The functions should be exposed to go/template and starlark built-ins for codelet.
 type HelperFuncs interface {
-	// LoadSpecsGlob loads specs from a directory with a glob pattern
-	// pluginName: the name of the plugin
-	// glob: the glob pattern of the spec files from the spec directory
-	// returns a map of spec file path and spec content as json encoded string
-	LoadSpecsGlob(pluginName string, glob string) (map[string]string, error)
-	// RenderFile renders a file with a template
-	// filePath: the file path to render
-	// templatePath: the template path
+	// LoadSpecsGlob loads specs from the given glob pattern in the spec directory.
+	// pluginName: the plugin name to load the specs
+	// glob: the glob pattern to search for specs
+	// returns a map of spec file path and spec content as json encoded string.
+	LoadSpecsGlob(pluginName string, glob string) (specs map[string]string, err error)
+	// RenderFile renders a file with the given template and data
+	// filePath: the file path to render. The path is relative to the output directory.
+	// templatePath: the template path. The path is relative to the ${codeletdir}/templates directory.
 	// data: the data to render
-	// returns the destination file path
-	RenderFile(filePath string, templatePath string, data any) (dst string)
-	// WithConfig returns the configuration as a map
-	WithConfig() map[string]any
+	// returns the destination file path.
+	RenderFile(filePath string, templatePath string, data any) (dst string, err error)
+	// WithConfig returns the configuration data given in the config file.
+	WithConfig() (config map[string]any)
 }
 
 // ToTemplateFuncmap converts the helper functions into a template.FuncMap
@@ -109,7 +109,10 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 				return nil, err
 			}
 
-			dst := h.RenderFile(string(filePath), string(templatePath), d)
+			dst, err := h.RenderFile(string(filePath), string(templatePath), d)
+			if err != nil {
+				return nil, err
+			}
 			return starlark.String(dst), nil
 		},
 	)

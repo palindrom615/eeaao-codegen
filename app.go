@@ -2,7 +2,6 @@ package eeaao_codegen
 
 import (
 	"encoding/json"
-	"github.com/palindrom615/eeaao-codegen/codelet"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
@@ -39,7 +38,7 @@ func NewApp(specDir string, outDir string, codeletDir string, configFile string)
 	if err != nil {
 		log.Fatalf("Error creating output directory: %v\n", err)
 	}
-	a.starlarkRunner.addModule("eeaao_codegen", codelet.ToStarlarkModule(a))
+	a.starlarkRunner.addModule("eeaao_codegen", ToStarlarkModule(a))
 	return a
 }
 
@@ -81,7 +80,7 @@ func (a *App) RunShell() {
 
 func (a *App) populateTemplate() {
 	a.tmpl = template.New("root")
-	a.tmpl.Funcs(codelet.ToTemplateFuncmap(a))
+	a.tmpl.Funcs(ToTemplateFuncmap(a))
 	tmplDir := filepath.Join(a.CodeletDir, "templates")
 
 	filepath.Walk(tmplDir, func(path string, info os.FileInfo, err error) error {

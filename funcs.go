@@ -8,21 +8,27 @@ import (
 	"path/filepath"
 )
 
-func (a *App) RenderFile(filePath string, templatePath string, data any) string {
+func (a *App) RenderFile(filePath string, templatePath string, data any) (dst string, err error) {
 	if !filepath.IsLocal(filePath) {
-		panic("filePath must be local")
+		log.Printf("invalid filePath: %s", filePath)
+		return "", nil
 	}
 	if !filepath.IsLocal(templatePath) {
-		panic("templatePath must be local")
+		log.Printf("invalid templatePath: %s", templatePath)
+		return "", nil
 	}
-	dst := filepath.Join(a.OutDir, filePath)
+	dst = filepath.Join(a.OutDir, filePath)
 	os.MkdirAll(filepath.Dir(dst), os.ModePerm)
 	dstFile, err := os.Create(dst)
 	if err != nil {
-		panic(err)
+		log.Printf("Error creating file '%s': %v\n", dst, err)
+		return "", err
 	}
-	a.tmpl.ExecuteTemplate(dstFile, templatePath, data)
-	return dst
+	err = a.tmpl.ExecuteTemplate(dstFile, templatePath, data)
+	if err != nil {
+		return "", err
+	}
+	return filePath, nil
 }
 
 func (a *App) LoadSpecsGlob(pluginName string, glob string) (map[string]string, error) {
