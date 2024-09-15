@@ -1,3 +1,9 @@
+// Package plugin provides the interface for plugins to load spec files.
+// The plugins are registered in the init function.
+//   - openapi: OpenAPI plugin
+//   - json: JSON plugin
+//   - yaml: YAML plugin
+
 package plugin
 
 // SpecData represent the data of a specification. it can be any type, depending on the plugin. For example, OpenAPI plugin uses go-openapi/loads.Spec() to load a spec file.
@@ -16,6 +22,8 @@ var plugins = PluginMap{}
 
 func init() {
 	plugins["openapi"] = OpenApiPlugin{}
+	plugins["json"] = JsonPlugin{}
+	plugins["yaml"] = YamlPlugin{}
 }
 
 func GetPlugin(pluginName string) Plugin {

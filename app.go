@@ -23,8 +23,8 @@ type App struct {
 // NewApp creates a new App instance
 // specDir: directory for specifications
 // outDir: directory for output
-// codeletDir: directory for templates
-// configFile: config file. if empty, config is ""
+// codeletDir: directory for codelet
+// configFile: config file. if empty, no config is loaded.
 func NewApp(specDir string, outDir string, codeletDir string, configFile string) *App {
 	conf := readConf(configFile)
 	a := &App{
@@ -56,14 +56,11 @@ func readConf(configFile string) map[string]any {
 	ext := filepath.Ext(configFile)
 	if ext == ".json" {
 		err = json.Unmarshal(configData, &config)
-		if err != nil {
-			log.Printf("Error parsing config file: %s\n%v\n", configFile, err)
-		}
 	} else if ext == ".yaml" || ext == ".yml" {
 		err = yaml.Unmarshal(configData, &config)
-		if err != nil {
-			log.Printf("Error parsing config file: %s\n%v\n", configFile, err)
-		}
+	}
+	if err != nil {
+		log.Printf("Error parsing config file: %s\n%v\n", configFile, err)
 	}
 	return config
 }
@@ -71,9 +68,9 @@ func readConf(configFile string) map[string]any {
 // Render renders the templates.
 // internally, it just runs `render.star` file in the CodeletDir
 func (a *App) Render() {
-	globals, err := a.starlarkRunner.runFile(filepath.Join(a.CodeletDir, "render.star"))
+	_, err := a.starlarkRunner.runFile(filepath.Join(a.CodeletDir, "render.star"))
 	if err != nil {
-		log.Printf("Error running render.star. globals: %v\n%v\n", globals, err)
+		log.Printf("Error running `render.star`. \n%v\n", err)
 	}
 }
 
