@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 )
 
@@ -82,23 +81,24 @@ func (a *App) populateTemplate() {
 	a.tmpl = template.New("root")
 	a.tmpl.Funcs(ToTemplateFuncmap(a))
 	tmplDir := filepath.Join(a.CodeletDir, "templates")
+	if stat, err := os.Stat(tmplDir); err != nil || !stat.IsDir() {
+		log.Printf("Failed to find templates directory [%s]\n", tmplDir)
+		return
+	}
 
 	filepath.Walk(tmplDir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
-		tmplName, found := strings.CutPrefix(path, tmplDir+"/")
-		if !found {
-			log.Fatalf("Error: %s is not in %s\n", path, tmplDir)
-		}
+		tmplName, _ := filepath.Rel(tmplDir, path)
 		tmplText, err := os.ReadFile(path)
 		if err != nil {
-			log.Printf("Error reading template file: %s; ignored\n%v\n", path, err)
+			log.Printf("Failed reading template file [%s]. skipped\n%v\n", path, err)
 			return nil
 		}
 		_, err = a.tmpl.New(tmplName).Parse(string(tmplText))
 		if err != nil {
-			log.Printf("Error parsing template file: %s; ignored\n%v\n", path, err)
+			log.Printf("Failed parsing template file [%s]; skipped\n%v\n", path, err)
 			return nil
 		}
 		return nil
