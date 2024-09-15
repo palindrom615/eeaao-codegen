@@ -3,6 +3,7 @@ package eeaao_codegen
 import (
 	"github.com/Masterminds/sprig"
 	"github.com/palindrom615/eeaao-codegen/plugin"
+	"log"
 	"maps"
 	"os"
 	"path/filepath"
@@ -44,9 +45,11 @@ func (a *App) loadSpecsGlob(pluginName string, glob string) (res []plugin.SpecDa
 		return nil
 	}
 	for _, match := range matches {
-		if doc := p.LoadSpecFile(match); doc != nil {
-			res = append(res, doc)
+		doc, err := p.LoadSpecFile(match)
+		if err != nil {
+			log.Printf("Error loading spec file '%s': %v\n", match, err)
 		}
+		res = append(res, doc)
 	}
 	return res
 }
