@@ -8,7 +8,7 @@ import (
 type JsonPlugin struct {
 }
 
-func (j JsonPlugin) LoadSpecFile(path string) (SpecData, error) {
+func (j *JsonPlugin) LoadSpecFile(path string) (SpecData, error) {
 	f, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

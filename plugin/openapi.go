@@ -7,8 +7,9 @@ import (
 type OpenApiPlugin struct {
 }
 
-func (o OpenApiPlugin) LoadSpecFile(path string) (SpecData, error) {
+func (o *OpenApiPlugin) LoadSpecFile(path string) (SpecData, error) {
 	doc, err := loads.Spec(path)
+	doc.Schema()
 	if err != nil {
 		return nil, err
 	}

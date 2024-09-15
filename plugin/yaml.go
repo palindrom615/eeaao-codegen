@@ -8,7 +8,7 @@ import (
 type YamlPlugin struct {
 }
 
-func (y YamlPlugin) LoadSpecFile(path string) (SpecData, error) {
+func (y *YamlPlugin) LoadSpecFile(path string) (SpecData, error) {
 	f, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
