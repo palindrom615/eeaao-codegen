@@ -78,7 +78,19 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 			if err := starlark.UnpackArgs("renderFile", args, kwargs, "filePath", &filePath, "templatePath", &templatePath, "data", &data); err != nil {
 				return nil, err
 			}
-			dst := h.RenderFile(string(filePath), string(templatePath), data)
+			encoded, err := encodeWithStarlarkJson(thread, data)
+			if err != nil {
+				log.Printf("Error encoding starlark injected data: %v\n%v\n", data, err)
+				return nil, err
+			}
+			d := make(map[string]any)
+			err = json.Unmarshal([]byte(encoded.(starlark.String)), &d)
+			if err != nil {
+				log.Printf("Error decoding starlark injected data: %v\n%v\n", encoded, err)
+				return nil, err
+			}
+
+			dst := h.RenderFile(string(filePath), string(templatePath), d)
 			return starlark.String(dst), nil
 		},
 	)
@@ -108,4 +120,9 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 func decodeWithStarlarkJson(thread *starlark.Thread, value starlark.Value) (starlark.Value, error) {
 	decode := json2.Module.Members["decode"].(*starlark.Builtin)
 	return starlark.Call(thread, decode, starlark.Tuple{value}, nil)
+}
+
+func encodeWithStarlarkJson(thread *starlark.Thread, value starlark.Value) (starlark.Value, error) {
+	encode := json2.Module.Members["encode"].(*starlark.Builtin)
+	return starlark.Call(thread, encode, starlark.Tuple{value}, nil)
 }

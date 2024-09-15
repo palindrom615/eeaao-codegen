@@ -1,10 +1,7 @@
-coins = {
-  'dime': 10,
-  'nickel': 5,
-  'penny': 1,
-  'quarter': 25,
-}
-print('By name:\t' + ', '.join(sorted(coins.keys())))
-print('By value:\t' + ', '.join(sorted(coins.keys(), key=coins.get)))
+
 print(eeaao_codegen.withConfig())
-print(eeaao_codegen.loadSpecsGlob("openapi", "*.json"))
+specs = eeaao_codegen.loadSpecsGlob("openapi", "*.json")
+print(specs["petstore.json"]["swagger"])
+for path in specs:
+  print(specs[path]["info"]["title"])
+  eeaao_codegen.renderFile("partial_headerFuck", "partial_header.tmpl", specs[path])
