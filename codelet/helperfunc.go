@@ -12,8 +12,8 @@ import (
 	"text/template"
 )
 
-// HelperFuncs is the interface for the helper functions
-// that can be used in the template or starlark script
+// HelperFuncs defines the helper functions for codelet.
+// The functions should be exposed to go/template and starlark built-ins for codelet.
 type HelperFuncs interface {
 	// LoadSpecsGlob loads specs from a directory with a glob pattern
 	// pluginName: the name of the plugin
@@ -30,6 +30,15 @@ type HelperFuncs interface {
 	WithConfig() map[string]any
 }
 
+// ToTemplateFuncmap converts the helper functions into a template.FuncMap
+// for use with template.
+//
+// The resulting FuncMap includes the following functions:
+//   - loadSpecsGlob: HelperFuncs.LoadSpecsGlob
+//   - renderFile: HelperFuncs.RenderFile
+//   - withConfig: HelperFuncs.WithConfig
+//
+// Additionally, it incorporates the sprig.FuncMap for extended functionality.
 func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 	funcmap := template.FuncMap{
 		"loadSpecsGlob": h.LoadSpecsGlob,
@@ -40,8 +49,18 @@ func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 	return funcmap
 }
 
-// ToStarlarkModule converts the helper functions to starlarkstruct.Module
-// due to the limitation of
+// ToStarlarkModule exposes the helper functions to starlarkstruct.Module.
+//
+// The module provides the following functions:
+//   - loadSpecsGlob(pluginName: str, glob: str) -> dict[str, any]
+//   - renderFile(filePath: str, templatePath: str, data: any) -> str
+//   - withConfig() -> dict[str, any]
+//
+// due to the limitation of interoperability between Go and Starlark, JSON encoding is used internally.
+//
+// For example, HelperFuncs.WithConfig() returns a map[string]any. When
+// `eeaao_codegen.withConfig` is called in starlark script, the map[string]any is first encoded
+// using json.Marshal and then decoded as starlark.Dict by `json.decode`.
 func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 	loadSpecsGlob := starlark.NewBuiltin(
 		"loadSpecsGlob",
