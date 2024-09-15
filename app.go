@@ -3,11 +3,6 @@ package eeaao_codegen
 import (
 	"encoding/json"
 	"github.com/palindrom615/eeaao-codegen/codelet"
-	json2 "go.starlark.net/lib/json"
-	"go.starlark.net/lib/math"
-	"go.starlark.net/lib/time"
-	"go.starlark.net/starlark"
-	"go.starlark.net/syntax"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
@@ -17,11 +12,12 @@ import (
 )
 
 type App struct {
-	specDir    string
-	OutDir     string
-	CodeletDir string
-	Conf       map[string]any
-	tmpl       *template.Template
+	specDir        string
+	OutDir         string
+	CodeletDir     string
+	Conf           map[string]any
+	tmpl           *template.Template
+	starlarkRunner *starlarkRunner
 }
 
 // NewApp creates a new App instance
@@ -31,14 +27,20 @@ type App struct {
 // configFile: config file. if empty, config is ""
 func NewApp(specDir string, outDir string, codeletDir string, configFile string) *App {
 	conf := readConf(configFile)
-	app := &App{
-		specDir:    specDir,
-		OutDir:     outDir,
-		CodeletDir: codeletDir,
-		Conf:       conf,
+	a := &App{
+		specDir:        specDir,
+		OutDir:         outDir,
+		CodeletDir:     codeletDir,
+		Conf:           conf,
+		starlarkRunner: newStarlarkRunner(),
 	}
-	app.populateTemplate()
-	return app
+	a.populateTemplate()
+	err := os.MkdirAll(a.OutDir, os.ModePerm)
+	if err != nil {
+		log.Fatalf("Error creating output directory: %v\n", err)
+	}
+	a.starlarkRunner.addModule("eeaao_codegen", codelet.ToStarlarkModule(a))
+	return a
 }
 
 func readConf(configFile string) map[string]any {
@@ -69,29 +71,15 @@ func readConf(configFile string) map[string]any {
 // Render renders the templates.
 // internally, it just runs `render.star` file in the CodeletDir
 func (a *App) Render() {
-	err := os.MkdirAll(a.OutDir, os.ModePerm)
-	if err != nil {
-		log.Fatalf("Error creating output directory: %v\n", err)
-	}
-	starlarkThread := &starlark.Thread{
-		Name: "main",
-	}
-	predefined := starlark.StringDict{
-		"eeaao": codelet.ToStarlarkModule(a),
-		"json":  json2.Module,
-		"math":  math.Module,
-		"time":  time.Module,
-	}
-	globals, err := starlark.ExecFileOptions(
-		&syntax.FileOptions{},
-		starlarkThread,
-		filepath.Join(a.CodeletDir, "render.star"),
-		nil,
-		predefined,
-	)
+	globals, err := a.starlarkRunner.runFile(filepath.Join(a.CodeletDir, "render.star"))
 	if err != nil {
 		log.Printf("Error running render.star. globals: %v\n%v\n", globals, err)
 	}
+}
+
+// RunShell starts a REPL shell for testing
+func (a *App) RunShell() {
+	a.starlarkRunner.runShell()
 }
 
 func (a *App) populateTemplate() {

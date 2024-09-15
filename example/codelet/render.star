@@ -6,5 +6,5 @@ coins = {
 }
 print('By name:\t' + ', '.join(sorted(coins.keys())))
 print('By value:\t' + ', '.join(sorted(coins.keys(), key=coins.get)))
-print(eeaao.withConfig())
-print(eeaao.loadSpecsGlob("openapi", "*.json"))
+print(eeaao_codegen.withConfig())
+print(eeaao_codegen.loadSpecsGlob("openapi", "*.json"))

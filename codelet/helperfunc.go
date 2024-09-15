@@ -96,7 +96,7 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 		},
 	)
 	return &starlarkstruct.Module{
-		Name: "eeaao",
+		Name: "eeaao_codegen",
 		Members: starlark.StringDict{
 			"loadSpecsGlob": loadSpecsGlob,
 			"renderFile":    renderFile,
