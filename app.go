@@ -2,6 +2,8 @@ package eeaao_codegen
 
 import (
 	"encoding/json"
+	"go.starlark.net/starlark"
+	"go.starlark.net/syntax"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
@@ -59,39 +61,24 @@ func readConf(configFile string) map[string]any {
 	return config
 }
 
-// Render renders the templates
-func (a *App) Render() string {
+// Render renders the templates.
+// internally, it just runs `render.star` file in the CodeletDir
+func (a *App) Render() {
 	err := os.MkdirAll(a.OutDir, os.ModePerm)
 	if err != nil {
 		log.Fatalf("Error creating output directory: %v\n", err)
 	}
-
-	// render `render.tmpl` with spec data
-	tmplData, err := os.ReadFile(filepath.Join(a.CodeletDir, "render.tmpl"))
-	tmpl := a.tmpl.New("../render.tmpl")
-
-	tmpl, err = tmpl.Parse(string(tmplData))
-	if err != nil {
-		log.Fatalf("Error parsing render.tmpl: %v\n", err)
+	// run `render.star` in the CodeletDir
+	starlarkThread := &starlark.Thread{
+		Name: "main",
 	}
-
-	// Create output file
-	outFilePath := filepath.Join(a.OutDir, "render")
-	outFile, err := os.Create(outFilePath)
-	if err != nil {
-		log.Fatal(err)
-		return ""
-	}
-	defer outFile.Close()
-
-	// Render template with spec data
-	err = tmpl.Execute(outFile, struct{}{})
-	if err != nil {
-		log.Fatal(err)
-		return ""
-	}
-
-	return outFilePath
+	starlark.ExecFileOptions(
+		&syntax.FileOptions{},
+		starlarkThread,
+		filepath.Join(a.CodeletDir, "render.star"),
+		nil,
+		make(starlark.StringDict),
+	)
 }
 
 func (a *App) populateTemplate() {

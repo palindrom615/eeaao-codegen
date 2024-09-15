@@ -1,6 +1,0 @@
-{{ range $schema := loadSpecsGlob "openapi" "*.json" }}
-    {{ renderFile "api.lua" "api.lua.tmpl" $schema }}
-    {{ renderFile "partial_header.lua" "partial_header.tmpl" $schema }}
-{{ end -}}
-
-

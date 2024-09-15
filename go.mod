@@ -30,5 +30,6 @@ require (
 	go.mongodb.org/mongo-driver v1.16.1 // indirect
 	go.starlark.net v0.0.0-20240725214946-42030a7cedce // indirect
 	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
