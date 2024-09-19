@@ -25,19 +25,23 @@ type App struct {
 // configFile: config file. if empty, no config is loaded.
 func NewApp(specDir string, outDir string, codeletDir string, configFile string) *App {
 	conf := readConf(configFile)
+
 	a := &App{
-		specDir:        specDir,
-		OutDir:         outDir,
-		CodeletDir:     codeletDir,
-		Conf:           conf,
-		starlarkRunner: newStarlarkRunner(),
+		specDir:    specDir,
+		OutDir:     outDir,
+		CodeletDir: codeletDir,
+		Conf:       conf,
 	}
 	a.populateTemplate()
-	err := os.MkdirAll(a.OutDir, os.ModePerm)
+	runner, err := newStarlarkRunner(codeletDir, ToStarlarkModule(a))
+	if err != nil {
+		log.Fatalf("Error creating starlark runner: %v\n", err)
+	}
+	a.starlarkRunner = runner
+	err = os.MkdirAll(a.OutDir, os.ModePerm)
 	if err != nil {
 		log.Fatalf("Error creating output directory: %v\n", err)
 	}
-	a.starlarkRunner.addModule("eeaao_codegen", ToStarlarkModule(a))
 	return a
 }
 
@@ -66,15 +70,12 @@ func readConf(configFile string) map[string]any {
 // Render renders the templates.
 // internally, it just runs `render.star` file in the CodeletDir
 func (a *App) Render() {
-	_, err := a.starlarkRunner.runFile(filepath.Join(a.CodeletDir, "render.star"))
-	if err != nil {
-		log.Printf("Error running `render.star`. \n%v\n", err)
-	}
+	a.starlarkRunner.Render()
 }
 
 // RunShell starts a REPL shell for testing
 func (a *App) RunShell() {
-	a.starlarkRunner.runShell()
+	a.starlarkRunner.RunShell()
 }
 
 func (a *App) populateTemplate() {

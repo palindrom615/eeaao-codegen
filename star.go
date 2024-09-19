@@ -8,48 +8,69 @@ import (
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 	"go.starlark.net/syntax"
+	"maps"
+	"path/filepath"
 )
 
 type starlarkRunner struct {
 	thread      *starlark.Thread
 	predefined  starlark.StringDict
 	fileOptions *syntax.FileOptions
+	codeletDir  string
 }
 
-func newStarlarkRunner() *starlarkRunner {
-	return &starlarkRunner{
+func newStarlarkRunner(codeletDir string, eeaaoModule *starlarkstruct.Module) (*starlarkRunner, error) {
+	s := &starlarkRunner{
 		thread: &starlark.Thread{Name: "main"},
 		predefined: starlark.StringDict{
-			"json": json2.Module,
-			"math": math.Module,
-			"time": time.Module,
+			"json":          json2.Module,
+			"math":          math.Module,
+			"time":          time.Module,
+			"eeaao_codegen": eeaaoModule,
 		},
 		fileOptions: &syntax.FileOptions{
 			Set:               true,
-			While:             true,
-			TopLevelControl:   true,
-			GlobalReassign:    true,
+			While:             false,
+			TopLevelControl:   false,
+			GlobalReassign:    false,
 			LoadBindsGlobally: false,
 			Recursion:         true,
 		},
+		codeletDir: codeletDir,
 	}
-}
-
-func (s *starlarkRunner) addModule(name string, module *starlarkstruct.Module) {
-	s.predefined[name] = module
-}
-
-func (s *starlarkRunner) runFile(file string) (starlark.StringDict, error) {
-	return starlark.ExecFileOptions(
+	globals, err := starlark.ExecFileOptions(
 		s.fileOptions,
 		s.thread,
-		file,
+		filepath.Join(codeletDir, "render.star"),
 		nil,
 		s.predefined,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	if globals["main"] == nil {
+		return nil, syntax.Error{
+			Msg: "main function not found in render.star",
+		}
+	}
+	maps.Copy(s.predefined, globals)
+
+	return s, nil
 }
 
-func (s *starlarkRunner) runShell() {
+// Render runs the main function in the starlark script
+func (s *starlarkRunner) Render() (starlark.Value, error) {
+	return starlark.Call(
+		s.thread,
+		s.predefined["main"],
+		starlark.Tuple{},
+		[]starlark.Tuple{},
+	)
+}
+
+// RunShell runs the starlark shell
+func (s *starlarkRunner) RunShell() {
 	repl.REPLOptions(
 		s.fileOptions,
 		s.thread,

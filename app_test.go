@@ -8,8 +8,8 @@ import (
 func TestRender(t *testing.T) {
 	a := eeaao_codegen.NewApp(
 		"./example/spec",
-		"./example/build",
-		"./example/codelet",
+		"./example/build/javascript",
+		"./example/codelets/javascript",
 		"./example/config.yaml",
 	)
 	a.Render()
