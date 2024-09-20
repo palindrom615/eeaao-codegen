@@ -1,0 +1,13 @@
+{{- $spec := $.spec -}}
+{{- $tag := $.tag -}}
+package com.example.api
+
+import javax.annotation.Generated
+
+@Generated("dev.palindrom615.eeaao.EeaaoCodegen")
+@io.swagger.annotations.Api(
+    value = {{ $tag.name }},
+    {{ with $tag.description -}} description = {{ . }}, {{- end }}
+)
+interface {{ title $tag.name }}Api {
+}

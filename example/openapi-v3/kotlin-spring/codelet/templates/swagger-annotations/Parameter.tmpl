@@ -1,0 +1,63 @@
+io.swagger.v3.oas.annotations.Parameter(
+    name = {{ quote .name }},
+    {{ with .in -}}
+    `in` = io.swagger.v3.oas.annotations.enums.ParameterIn.{{ upper . }},
+    {{- end -}}
+    {{ with .description -}}
+    description = {{ quote . }},
+    {{- end -}}
+    {{ with .required -}}
+    required = {{ . }},
+    {{- end -}}
+    {{ with .deprecated -}}
+    deprecated = {{ . }},
+    {{- end -}}
+    {{ with .allowEmptyValue -}}
+    allowEmptyValue = {{ . }},
+    {{- end -}}
+    {{ with .style -}}
+    style = io.swagger.v3.oas.annotations.enums.ParameterStyle.{{ upper . }},
+    {{- end -}}
+    {{ with .explode -}}
+    explode = io.swagger.v3.oas.annotations.enums.Explode.{{ upper . }},
+    {{- end -}}
+    {{ with .allowReserved -}}
+    allowReserved = {{ . }},
+    {{- end -}}
+    {{ with .schema -}}
+    schema = {{ template "swagger-annotations/Schema.tmpl" .schema }},
+    {{- end -}}
+    {{ with .array -}}
+    array = {{ template "swagger-annotations/ArraySchema.tmpl" .array }},
+    {{- end -}}
+    {{ with .content -}}
+    content = {
+        {{- range $key, $value := .content }}
+        {{ $key }} = {{ template "swagger-annotations/MediaType.tmpl" $value }},
+        {{- end -}}
+    },
+    {{- end -}}
+    {{ with .hidden -}}
+    hidden = {{ . }},
+    {{- end -}}
+    {{ with .example -}}
+    example = {{ quote . }},
+    {{- end -}}
+    {{ with .examples -}}
+    examples = {
+        {{- range $key, $value := .examples }}
+        {{ $key }} = {{ template "swagger-annotations/Example.tmpl" $value }},
+        {{- end -}}
+    },
+    {{- end -}}
+    {{ with .extensions -}}
+    extensions = {
+        {{- range $key, $value := .extensions }}
+        {{ $key }} = {{ quote $value }},
+        {{- end -}}
+    },
+    {{- end -}}
+    {{ with .ref -}}
+    ref = {{ quote . }},
+    {{- end -}}
+)

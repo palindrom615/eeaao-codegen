@@ -1,0 +1,4 @@
+io.swagger.v3.oas.annotations.ExternalDocumentation(
+    url = {{ quote .url }},
+    {{ with .description -}} description = {{ quote . }}{{- end }},
+)

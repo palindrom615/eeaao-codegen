@@ -12,6 +12,16 @@
       "url": "http://petstore.swagger.io/v1"
     }
   ],
+  "tags": [
+    {
+      "name": "pets",
+      "description": "Everything about your Pets",
+      "externalDocs": {
+        "description": "Find out more",
+        "url": "http://swagger.io"
+      }
+    }
+  ],
   "paths": {
     "/pets": {
       "get": {
