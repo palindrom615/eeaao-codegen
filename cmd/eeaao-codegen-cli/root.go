@@ -18,10 +18,11 @@ var rootCmd = &cobra.Command{
 	Short: "anything code generator",
 	Long: `anything code generator.
 		You can generate anything from anything with this tool.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		app := eeaao_codegen.NewApp(specdir, outdir, codeletdir, configFile)
-		app.Render()
+		return app.Render()
 	},
+	SilenceUsage: true,
 }
 
 func init() {

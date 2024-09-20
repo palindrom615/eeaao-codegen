@@ -69,8 +69,9 @@ func readConf(configFile string) map[string]any {
 
 // Render renders the templates.
 // internally, it just runs `render.star` file in the CodeletDir
-func (a *App) Render() {
-	a.starlarkRunner.Render()
+func (a *App) Render() error {
+	_, err := a.starlarkRunner.Render()
+	return err
 }
 
 // RunShell starts a REPL shell for testing
