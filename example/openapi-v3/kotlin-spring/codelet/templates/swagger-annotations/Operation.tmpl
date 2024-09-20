@@ -1,0 +1,18 @@
+io.swagger.v3.oas.annotations.Operation(
+    tags = [{{ range $tag := .tags }}{{ quote $tag }}, {{ end }}],
+    {{ with .summary }}summary = {{ quote . }},{{ end }}
+    {{ with .description }}description = {{ quote . }},{{ end }}
+    {{ with .externalDocs }}externalDocs = {{ include "swagger-annotations/ExternalDocumentation.tmpl" . | indent 4 | trim  }},{{ end }}
+    {{ with .operationId }}operationId = {{ quote . }},{{ end }}
+    {{ with .responses }}responses = [
+    {{- range $response := . -}}
+        {{- include "swagger-annotations/ApiResponse.tmpl" $response | nindent 8 -}},
+    {{- end }}
+    ],{{ end }}
+    {{ with .deprecated }}deprecated = {{ . }},{{ end }}
+    {{ with .security }}security = [
+    {{- range $security := . -}}
+        {{- include "swagger-annotations/SecurityRequirement.tmpl" $security | nindent 8  -}},
+    {{- end }}
+    ],{{ end }}
+)

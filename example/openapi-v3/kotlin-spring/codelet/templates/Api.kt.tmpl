@@ -8,48 +8,18 @@ import javax.annotation.Generated
 @{{ include "swagger-annotations/Tag.tmpl" $tag }}
 interface {{ title $tag.name }}Api {
 {{- range $path, $pathSpec := .spec.paths -}}
-    {{- range $method, $operation := $pathSpec -}}
-        {{ if has $tag.name $operation.tags }}
-            @io.swagger.v3.oas.annotations.Operation(
-                summary = "{{ $operation.summary }}",
-                operationId = "{{ $operation.operationId }}",
-                responses = [
-                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                        responseCode = "200",
-                        description = "A list of pets",
-                        content = [
-                            @io.swagger.v3.oas.annotations.media.Content(
-                                mediaType = "application/json",
-                                array = @io.swagger.v3.oas.annotations.media.ArraySchema(
-                                    arraySchema = @io.swagger.v3.oas.annotations.media.Schema(name = "Pets"),
-                                    schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Pet::class),
-                                    maxItems = 100,
-                                ),
-                            ),
-                        ],
-                        headers = [
-                            @io.swagger.v3.oas.annotations.headers.Header(
-                                name = "x-next",
-                                description = "A link to the next page of responses",
-                                schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"),
-                            ),
-                        ],
-                    ),
-                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                        responseCode = "default",
-                        description = "unexpected error",
-                        content = [@io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Error::class))],
-                    ),
-                ],
-            )
-            @org.springframework.web.bind.annotation.GetMapping("{{ $path }}")
-            fun {{ $operation.operationId }}(
-                {{- range $parameter := $operation.parameters -}}
-                @{{ template "swagger-annotations/Parameter.tmpl" $parameter }}
-                {{ $parameter.name }}: {{ $parameter.schema.type }} = {{ $parameter.schema.default }},
-                {{- end }}
-            ){{- with index $operation.responses "200" -}}: {{ template "schema-mapping.tmpl"  index .content "application/json" "schema" }}; {{- end }}
-        {{- end -}}
-    {{- end -}}
+{{- range $method, $operation := $pathSpec -}}
+    {{- if not (has $tag.name $operation.tags) -}}
+        {{- continue -}}
+    {{- end }}
+    @{{ include "swagger-annotations/Operation.tmpl" $operation | indent 4 | trim }}
+    @org.springframework.web.bind.annotation.GetMapping("{{ $path }}")
+    fun {{ $operation.operationId }}(
+        {{- range $parameter := $operation.parameters -}}
+        @{{ include "swagger-annotations/Parameter.tmpl" $parameter }}
+        {{ $parameter.name }}: {{ $parameter.schema.type }} = {{ $parameter.schema.default }},
+        {{- end }}
+    ){{- with index $operation.responses "200" -}}: {{ include "schema-mapping.tmpl"  (index .content "application/json" "schema") }}; {{- end }}
+{{- end -}}
 {{- end -}}
 }
