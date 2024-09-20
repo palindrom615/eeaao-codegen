@@ -28,6 +28,12 @@ type HelperFuncs interface {
 	RenderFile(filePath string, templatePath string, data any) (dst string, err error)
 	// WithConfig returns the configuration data given in the config file.
 	WithConfig() (config map[string]any)
+	// Include renders a template with the given data.
+	//
+	// Drop-in replacement for template pipeline, but with a string return value so that it can be treated as a string in the template.
+	//
+	// Inspired by [helm include function](https://helm.sh/docs/chart_template_guide/named_templates/#the-include-function)
+	Include(templatePath string, data interface{}) (string, error)
 }
 
 // ToTemplateFuncmap converts the helper functions into a template.FuncMap
@@ -44,6 +50,7 @@ func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 		"loadSpecsGlob": h.LoadSpecsGlob,
 		"renderFile":    h.RenderFile,
 		"withConfig":    h.WithConfig,
+		"include":       h.Include,
 	}
 	maps.Copy(funcmap, sprig.FuncMap())
 	return funcmap

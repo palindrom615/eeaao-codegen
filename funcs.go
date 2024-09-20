@@ -1,6 +1,7 @@
 package eeaao_codegen
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/palindrom615/eeaao-codegen/plugin"
 	"log"
@@ -57,4 +58,12 @@ func (a *App) LoadSpecsGlob(pluginName string, glob string) (map[string]string, 
 
 func (a *App) WithConfig() map[string]any {
 	return a.Conf
+}
+
+func (a *App) Include(templatePath string, data interface{}) (string, error) {
+	buf := bytes.NewBuffer(nil)
+	if err := a.tmpl.ExecuteTemplate(buf, templatePath, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
