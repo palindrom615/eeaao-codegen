@@ -1,0 +1,18 @@
+{{- if eq (len .type) 1 -}}
+    {{- $t := index .type 0 -}}
+    {{- if eq $t "string" -}}
+        string
+    {{- else if eq $t "integer" -}}
+        int
+    {{- else if eq $t "number" -}}
+        float64
+    {{- else if eq $t "boolean" -}}
+        bool
+    {{- else if eq $t "array" -}}
+        []{{ include "type-mapping.tmpl" .items }}
+    {{- else if eq $t "object" -}}
+        {{ include "schema-mapping.tmpl" .properties }}
+    {{- end -}}
+{{- else -}}
+    Any
+{{- end -}}
