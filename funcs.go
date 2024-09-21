@@ -2,7 +2,7 @@ package eeaao_codegen
 
 import (
 	"bytes"
-	"github.com/palindrom615/eeaao-codegen/plugin"
+	"encoding/json"
 	"log"
 	"os"
 	"path/filepath"
