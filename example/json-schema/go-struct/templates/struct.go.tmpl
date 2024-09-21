@@ -1,6 +1,4 @@
-package __generated__
-
-type {{ title .title }} struct {
+struct {
 {{- range $name, $field := .properties }}
     {{ title $name }} {{ include "type-mapping.tmpl" $field }} `json:"{{ $name }}"`{{ if $field.required }} // required{{ end }}
 {{- end }}

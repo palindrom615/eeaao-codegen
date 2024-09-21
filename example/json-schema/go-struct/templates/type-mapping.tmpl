@@ -1,5 +1,7 @@
-{{- if eq (len .type) 1 -}}
-    {{- $t := index .type 0 -}}
+{{- if not (eq (index . "$ref") "") -}}
+    {{ title (trimPrefix "#/$defs/" (index . "$ref")) }}
+{{- else if eq (len .type) 1 -}}
+    {{- range $t := .type -}}
     {{- if eq $t "string" -}}
         string
     {{- else if eq $t "integer" -}}
@@ -9,9 +11,10 @@
     {{- else if eq $t "boolean" -}}
         bool
     {{- else if eq $t "array" -}}
-        []{{ include "type-mapping.tmpl" .items }}
+        []{{ include "type-mapping.tmpl" $.items }}
     {{- else if eq $t "object" -}}
         {{ include "schema-mapping.tmpl" .properties }}
+    {{- end -}}
     {{- end -}}
 {{- else -}}
     Any
