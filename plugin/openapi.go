@@ -1,17 +1,26 @@
 package plugin
 
 import (
-	"github.com/go-openapi/loads"
+	"io"
 )
 
 type OpenApiPlugin struct {
+	jsonPlugin *JsonPlugin
+	yamlPlugin *YamlPlugin
 }
 
 func (o *OpenApiPlugin) LoadSpecFile(path string) (SpecData, error) {
-	doc, err := loads.Spec(path)
-	doc.Schema()
+	file, err := o.jsonPlugin.LoadSpecFile(path)
 	if err != nil {
-		return nil, err
+		return o.yamlPlugin.LoadSpecFile(path)
 	}
-	return doc.Spec(), nil
+	return file, nil
+}
+
+func (o *OpenApiPlugin) LoadSpec(reader io.Reader) (SpecData, error) {
+	specdata, err := o.jsonPlugin.LoadSpec(reader)
+	if err != nil {
+		return o.yamlPlugin.LoadSpec(reader)
+	}
+	return specdata, nil
 }

@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 )
 
@@ -9,14 +10,18 @@ type JsonPlugin struct {
 }
 
 func (j *JsonPlugin) LoadSpecFile(path string) (SpecData, error) {
-	f, err := os.ReadFile(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	data := make(map[string]interface{})
-	err = json.Unmarshal(f, &data)
+	return j.LoadSpec(f)
+}
+
+func (j *JsonPlugin) LoadSpec(reader io.Reader) (SpecData, error) {
+	specData := make(map[string]any)
+	err := json.NewDecoder(reader).Decode(&specData)
 	if err != nil {
 		return nil, err
 	}
-	return data, nil
+	return specData, nil
 }

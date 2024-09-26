@@ -13,7 +13,7 @@ def getTags(spec):
 def main():
     values = eeaao_codegen.loadValues()
     print(values)
-    spec = eeaao_codegen.loadSpecsGlob('json', 'petstore.json')["petstore.json"]
+    spec = eeaao_codegen.loadSpecFile('json', 'petstore.json')
     tags = getTags(spec)
     for t in tags:
         eeaao_codegen.renderFile(

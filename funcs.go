@@ -50,6 +50,15 @@ func (a *App) LoadSpecsGlob(pluginName string, glob string) (map[string]plugin.S
 	return res, nil
 }
 
+func (a *App) LoadSpecFile(pluginName string, filePath string) (plugin.SpecData, error) {
+	p := a.plugins.GetPlugin(pluginName)
+	if !filepath.IsLocal(filePath) {
+		log.Printf("invalid filePath: %s", filePath)
+		return "", nil
+	}
+	return p.LoadSpecFile(filepath.Join(a.specDir, filePath))
+}
+
 func (a *App) LoadValues() map[string]any {
 	return a.Values
 }

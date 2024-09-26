@@ -3,6 +3,7 @@ package plugin
 import (
 	"github.com/bufbuild/protocompile/parser"
 	"github.com/bufbuild/protocompile/reporter"
+	"io"
 	"log"
 	"os"
 )
@@ -24,8 +25,23 @@ func NewProtobufPlugin() *ProtobufPlugin {
 }
 
 func (p *ProtobufPlugin) LoadSpecFile(path string) (SpecData, error) {
-	reader, _ := os.Open(path)
+	reader, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
 	fileNode, err := parser.Parse(path, reader, p.handler)
+	if err != nil {
+		return nil, err
+	}
+	res, err := parser.ResultFromAST(fileNode, false, p.handler)
+	if err != nil {
+		return nil, err
+	}
+	return res.FileDescriptorProto(), nil
+}
+
+func (p *ProtobufPlugin) LoadSpec(reader io.Reader) (SpecData, error) {
+	fileNode, err := parser.Parse("", reader, p.handler)
 	if err != nil {
 		return nil, err
 	}
