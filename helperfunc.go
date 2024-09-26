@@ -4,6 +4,7 @@ package eeaao_codegen
 import (
 	"encoding/json"
 	"github.com/Masterminds/sprig"
+	"github.com/palindrom615/eeaao-codegen/plugin"
 	json2 "go.starlark.net/lib/json"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
@@ -19,7 +20,7 @@ type HelperFuncs interface {
 	// pluginName: the plugin name to load the specs
 	// glob: the glob pattern to search for specs
 	// returns a map of spec file path and spec content as json encoded string.
-	LoadSpecsGlob(pluginName string, glob string) (specs map[string]string, err error)
+	LoadSpecsGlob(pluginName string, glob string) (specs map[string]plugin.SpecData, err error)
 	// RenderFile renders a file with the given template and data
 	// filePath: the file path to render. The path is relative to the output directory.
 	// templatePath: the template path. The path is relative to the ${codeletdir}/templates directory.
@@ -85,7 +86,11 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 
 			specs := starlark.NewDict(len(specsLoaded))
 			for path, spec := range specsLoaded {
-				decoded, err := decodeWithStarlarkJson(thread, starlark.String(spec))
+				specStr, err := json.Marshal(spec)
+				if err != nil {
+					return nil, err
+				}
+				decoded, err := decodeWithStarlarkJson(thread, starlark.String(specStr))
 				if err != nil {
 					log.Printf("Error decoding spec file '%s': %v\n", path, err)
 				}
