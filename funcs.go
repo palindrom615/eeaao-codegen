@@ -32,7 +32,7 @@ func (a *App) RenderFile(filePath string, templatePath string, data any) (dst st
 }
 
 func (a *App) LoadSpecsGlob(pluginName string, glob string) (map[string]plugin.SpecData, error) {
-	p := plugin.GetPlugin(pluginName)
+	p := a.plugins.GetPlugin(pluginName)
 	matches, err := filepath.Glob(filepath.Join(a.specDir, glob))
 	if err != nil {
 		return nil, err

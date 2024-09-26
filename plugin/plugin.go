@@ -15,18 +15,3 @@ type SpecData any
 type Plugin interface {
 	LoadSpecFile(path string) (SpecData, error)
 }
-
-type PluginMap map[string]Plugin
-
-var plugins = PluginMap{}
-
-func init() {
-	plugins["openapi"] = &OpenApiPlugin{}
-	plugins["json"] = &JsonPlugin{}
-	plugins["yaml"] = &YamlPlugin{}
-	plugins["proto"] = NewProtobufPlugin()
-}
-
-func GetPlugin(pluginName string) Plugin {
-	return plugins[pluginName]
-}

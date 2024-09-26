@@ -7,10 +7,10 @@ import (
 
 func TestRender(t *testing.T) {
 	a := eeaao_codegen.NewApp(
-		"./example/spec",
-		"./example/build/javascript",
-		"./example/codelets/javascript",
-		"./example/config.yaml",
+		"./example/openapi-v3/spec",
+		"./example/openapi-v3/kotlin-spring/build",
+		"./example/openapi-v3/kotlin-spring/codelet",
+		"./example/openapi-v3/kotlin-spring/values.yaml",
 	)
 	a.Render()
 }

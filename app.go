@@ -2,6 +2,7 @@ package eeaao_codegen
 
 import (
 	"encoding/json"
+	"github.com/palindrom615/eeaao-codegen/plugin"
 	"gopkg.in/yaml.v3"
 	"log"
 	"maps"
@@ -17,6 +18,7 @@ type App struct {
 	Values         map[string]any
 	tmpl           *template.Template
 	starlarkRunner *starlarkRunner
+	plugins        plugin.Plugins
 }
 
 // NewApp creates a new App instance
@@ -29,6 +31,7 @@ func NewApp(specDir string, outDir string, codeletDir string, valuesFile string)
 		specDir:    specDir,
 		OutDir:     outDir,
 		CodeletDir: codeletDir,
+		plugins:    plugin.NewPlugins(),
 	}
 	a.loadValues(valuesFile)
 
