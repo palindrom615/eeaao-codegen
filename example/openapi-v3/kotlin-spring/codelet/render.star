@@ -11,6 +11,8 @@ def getTags(spec):
 
 
 def main():
+    values = eeaao_codegen.loadValues()
+    print(values)
     spec = eeaao_codegen.loadSpecsGlob('json', 'petstore.json')["petstore.json"]
     tags = getTags(spec)
     for t in tags:

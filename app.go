@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"gopkg.in/yaml.v3"
 	"log"
+	"maps"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -13,7 +14,7 @@ type App struct {
 	specDir        string
 	OutDir         string
 	CodeletDir     string
-	Conf           map[string]any
+	Values         map[string]any
 	tmpl           *template.Template
 	starlarkRunner *starlarkRunner
 }
@@ -22,16 +23,15 @@ type App struct {
 // specDir: directory for specifications
 // outDir: directory for output
 // codeletDir: directory for codelet
-// configFile: config file. if empty, no config is loaded.
-func NewApp(specDir string, outDir string, codeletDir string, configFile string) *App {
-	conf := readConf(configFile)
-
+// valuesFile: file path of external values file. if empty, it will be ignored.
+func NewApp(specDir string, outDir string, codeletDir string, valuesFile string) *App {
 	a := &App{
 		specDir:    specDir,
 		OutDir:     outDir,
 		CodeletDir: codeletDir,
-		Conf:       conf,
 	}
+	a.loadValues(valuesFile)
+
 	a.populateTemplate()
 	runner, err := newStarlarkRunner(codeletDir, ToStarlarkModule(a))
 	if err != nil {
@@ -45,26 +45,43 @@ func NewApp(specDir string, outDir string, codeletDir string, configFile string)
 	return a
 }
 
-func readConf(configFile string) map[string]any {
-	config := make(map[string]any)
-	if configFile == "" {
-		return config
-	}
-	configData, err := os.ReadFile(configFile)
+// loadValues loads App.Values from valuesFile.
+// it first tries to load default values from CodeletDir/values.yaml.
+// then it tries to load external values from valuesFile and override the default values.
+// any error will be logged and ignored.
+func (a *App) loadValues(valuesFile string) {
+	a.Values = make(map[string]any)
+	defaultValueFilePath := filepath.Join(a.CodeletDir, "values.yaml")
+	defaultValueFile, err := os.Open(defaultValueFilePath)
 	if err != nil {
-		log.Printf("config file not found: %s\n%v\n", configFile, err)
-		return config
+		log.Printf("Error opening default values file %s: %v\n", defaultValueFilePath, err)
 	}
-	ext := filepath.Ext(configFile)
+	err = yaml.NewDecoder(defaultValueFile).Decode(&a.Values)
+	if err != nil {
+		log.Printf("Error parsing default values file %s: %v\n", defaultValueFilePath, err)
+	}
+	if valuesFile == "" {
+		return
+	}
+	c, err := os.Open(valuesFile)
+	if err != nil {
+		log.Printf("Error opening values file: %s\n%v\n", valuesFile, err)
+		return
+	}
+
+	externalValues := make(map[string]any)
+	ext := filepath.Ext(valuesFile)
 	if ext == ".json" {
-		err = json.Unmarshal(configData, &config)
+		err = json.NewDecoder(c).Decode(&externalValues)
 	} else if ext == ".yaml" || ext == ".yml" {
-		err = yaml.Unmarshal(configData, &config)
+		err = yaml.NewDecoder(c).Decode(&externalValues)
+	} else {
+		log.Printf("Unknown values file type: %s\n", valuesFile)
 	}
 	if err != nil {
-		log.Printf("Error parsing config file: %s\n%v\n", configFile, err)
+		log.Printf("Error parsing values file: %s\n%v\n", valuesFile, err)
 	}
-	return config
+	maps.Copy(a.Values, externalValues)
 }
 
 // Render renders the templates.
