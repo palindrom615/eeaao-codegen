@@ -56,8 +56,8 @@ func (a *App) LoadSpecsGlob(pluginName string, glob string) (map[string]string, 
 	return res, nil
 }
 
-func (a *App) WithConfig() map[string]any {
-	return a.Conf
+func (a *App) LoadValues() map[string]any {
+	return a.Values
 }
 
 func (a *App) Include(templatePath string, data interface{}) (string, error) {

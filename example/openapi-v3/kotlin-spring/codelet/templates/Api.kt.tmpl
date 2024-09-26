@@ -1,6 +1,7 @@
 {{- $spec := $.spec -}}
 {{- $tag := $.tag -}}
-package com.example.api
+{{- $values := loadValues -}}
+package {{ $values.javaPackage }}
 
 import javax.annotation.Generated
 

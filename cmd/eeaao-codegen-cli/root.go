@@ -11,7 +11,7 @@ var (
 	specdir    string
 	codeletdir string
 	outdir     string
-	configFile string
+	valuesFile string
 )
 var rootCmd = &cobra.Command{
 	Use:   "eeaao-codegen-cli",
@@ -19,7 +19,7 @@ var rootCmd = &cobra.Command{
 	Long: `anything code generator.
 		You can generate anything from anything with this tool.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		app := eeaao_codegen.NewApp(specdir, outdir, codeletdir, configFile)
+		app := eeaao_codegen.NewApp(specdir, outdir, codeletdir, valuesFile)
 		return app.Render()
 	},
 	SilenceUsage: true,
@@ -29,7 +29,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&specdir, "specdir", "", "Directory for specifications")
 	rootCmd.PersistentFlags().StringVar(&codeletdir, "codeletdir", "", "Directory for templates")
 	rootCmd.PersistentFlags().StringVar(&outdir, "outdir", "build", "Directory for output")
-	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file")
+	rootCmd.PersistentFlags().StringVar(&valuesFile, "value", "", "value file")
 
 	rootCmd.MarkPersistentFlagRequired("specdir")
 	rootCmd.MarkPersistentFlagRequired("codeletdir")

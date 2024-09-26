@@ -26,8 +26,8 @@ type HelperFuncs interface {
 	// data: the data to render
 	// returns the destination file path.
 	RenderFile(filePath string, templatePath string, data any) (dst string, err error)
-	// WithConfig returns the configuration data given in the config file.
-	WithConfig() (config map[string]any)
+	// LoadValues returns the values data from codelet's default values.yaml file and given values file.
+	LoadValues() (config map[string]any)
 	// Include renders a template with the given data.
 	//
 	// Drop-in replacement for template pipeline, but with a string return value so that it can be treated as a string in the template.
@@ -42,14 +42,14 @@ type HelperFuncs interface {
 // The resulting FuncMap includes the following functions:
 //   - loadSpecsGlob: HelperFuncs.LoadSpecsGlob
 //   - renderFile: HelperFuncs.RenderFile
-//   - withConfig: HelperFuncs.WithConfig
+//   - loadValues: HelperFuncs.LoadValues
 //
 // Additionally, it incorporates the sprig.FuncMap for extended functionality.
 func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 	funcmap := template.FuncMap{
 		"loadSpecsGlob": h.LoadSpecsGlob,
 		"renderFile":    h.RenderFile,
-		"withConfig":    h.WithConfig,
+		"loadValues":    h.LoadValues,
 		"include":       h.Include,
 	}
 	maps.Copy(funcmap, sprig.FuncMap())
@@ -61,12 +61,12 @@ func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 // The module provides the following functions:
 //   - loadSpecsGlob(pluginName: str, glob: str) -> dict[str, any]
 //   - renderFile(filePath: str, templatePath: str, data: any) -> str
-//   - withConfig() -> dict[str, any]
+//   - loadValues() -> dict[str, any]
 //
 // due to the limitation of interoperability between Go and Starlark, JSON encoding is used internally.
 //
-// For example, HelperFuncs.WithConfig() returns a map[string]any. When
-// `eeaao_codegen.withConfig` is called in starlark script, the map[string]any is first encoded
+// For example, HelperFuncs.LoadValues() returns a map[string]any. When
+// `eeaao_codegen.loadValues` is called in starlark script, the map[string]any is first encoded
 // using json.Marshal and then decoded as starlark.Dict by `json.decode`.
 func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 	loadSpecsGlob := starlark.NewBuiltin(
@@ -123,13 +123,13 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 			return starlark.String(dst), nil
 		},
 	)
-	withConfig := starlark.NewBuiltin(
-		"withConfig",
+	loadValues := starlark.NewBuiltin(
+		"loadValues",
 		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-			if err := starlark.UnpackArgs("withConfig", args, kwargs); err != nil {
+			if err := starlark.UnpackArgs("loadValues", args, kwargs); err != nil {
 				return nil, err
 			}
-			conf, err := json.Marshal(h.WithConfig())
+			conf, err := json.Marshal(h.LoadValues())
 			if err != nil {
 				return nil, err
 			}
@@ -141,7 +141,7 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 		Members: starlark.StringDict{
 			"loadSpecsGlob": loadSpecsGlob,
 			"renderFile":    renderFile,
-			"withConfig":    withConfig,
+			"loadValues":    loadValues,
 		},
 	}
 }

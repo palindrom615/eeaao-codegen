@@ -13,7 +13,7 @@ var shellCmd = &cobra.Command{
 	Use:   "shell",
 	Short: "Start a REPL shell for testing render.star",
 	Run: func(cmd *cobra.Command, args []string) {
-		app := eeaao_codegen.NewApp(specdir, outdir, codeletdir, configFile)
+		app := eeaao_codegen.NewApp(specdir, outdir, codeletdir, valuesFile)
 		app.RunShell()
 	},
 }
