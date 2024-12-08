@@ -2,10 +2,10 @@ package dev.palindrom615.eeaao;
 
 import com.google.gradle.osdetector.OsDetector;
 import org.gradle.api.Action;
+import org.gradle.api.file.Directory;
 import org.gradle.api.tasks.Exec;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -19,6 +19,8 @@ public class GenerateEeaaoTask extends Exec {
     private static final String EXECUTABLE_PATH_FMT = "dev/palindrom615/eeaao/eeaao-codegen-cli-%s-%s";
     private EeaaoCodegenOptions options = getProject().getExtensions().getByType(EeaaoCodegenOptions.class);
     private OsDetector osDetector = getProject().getExtensions().getByType(OsDetector.class);
+    private final Directory tmpDir = getProject().getLayout().getBuildDirectory().dir("tmp").get();
+    private final Path executablePath = tmpDir.file("eeaao-codegen-cli").getAsFile().toPath();
 
     /**
      * Default constructor
@@ -51,32 +53,31 @@ public class GenerateEeaaoTask extends Exec {
         );
     }
 
-    private String findEeaaoCodegenCliPath() {
-        final String executablePath = String.format(
+    private void extractExecutable() {
+        tmpDir.getAsFile().mkdirs();
+        final String executableResource = String.format(
                 EXECUTABLE_PATH_FMT,
                 OsDetectorConverters.convertOs(osDetector.getOs()),
                 OsDetectorConverters.convertArch(osDetector.getArch())
         );
-        final URL resource = getClass().getClassLoader().getResource(executablePath);
+        final URL resource = getClass().getClassLoader().getResource(executableResource);
         if (resource == null) {
             throw new RuntimeException("eeaao-codegen-cli executable not found");
         }
-        final Path tmpPath;
-        try {
-            tmpPath = Files.createTempFile("eeaao-codegen-cli", null);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to create temporary eeaao-codegen-cli executable file", e);
-        }
         try (final InputStream is = resource.openStream()) {
-            Files.copy(is, tmpPath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(is, executablePath, StandardCopyOption.REPLACE_EXISTING);
+            if(!executablePath.toFile().setExecutable(true)) {
+                throw new RuntimeException("Failed to set eeaao-codegen-cli executable permission");
+            }
         } catch (Exception e) {
             throw new RuntimeException("Failed to copy eeaao-codegen-cli executable to temp file", e);
         }
-        final File tmpFile = tmpPath.toFile();
-        if (!tmpFile.setExecutable(true)) {
-            throw new RuntimeException("Failed to set eeaao-codegen-cli executable permission");
+    }
+
+    private String findEeaaoCodegenCliPath() {
+        if(!executablePath.toFile().exists()) {
+            extractExecutable();
         }
-        tmpFile.deleteOnExit();
-        return tmpPath.toString();
+        return executablePath.toString();
     }
 }
