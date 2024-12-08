@@ -1,0 +1,10 @@
+package {{.javaPackage}};
+
+import javax.annotation.processing.Generated;
+
+@Generated("eeaao-codegen")
+class ProjectInfoProvider {
+    public String getVersion() {
+        return "{{.version}}";
+    }
+}

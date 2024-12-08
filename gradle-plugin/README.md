@@ -1,6 +1,6 @@
-# EEAAO Codegen Gradle Plugin
+# eeaao-codegen Gradle Plugin
 
-This gradle plugin is a wrapper around the [EEAAO Codegen](../README.md). It provides a way to run the codegen tool as a gradle task.
+This gradle plugin is a wrapper around the [eeaao-codegen](../README.md).
 
 ## Usage
 
@@ -22,11 +22,13 @@ plugins {
 
 ### Configuration
 
+By default the plugin register a task named `eeaaoCodegen`. You can configure the task by using `eeaaoCodegen` extension.
+
 ```kotlin
 eeaaoCodegen {
     specDir = "src/main/resources/spec"
     codeletDir = "src/main/resources/codelet"
-    outDir = "src/generated/kotlin"
+    outDir = "src/__generated__/java"
 }
 ```
 
@@ -39,6 +41,29 @@ internally, each of the option is mapped to a command line argument. The followi
 | `outDir` | `--outdir` | The directory where the generated code will be written. |
 
 for further description about each options, check [main eeaao-codegen project](../README.md)
+
+#### further configurations
+
+By default, the plugin itself does not add `outDir` in your project's srcSets or make dependency on `build` task.
+This is intentional not to mess up your project's layout or task dependency graph. 
+
+If you want to add `outDir` to your project's srcSets, you can do it manually. 
+
+```kotlin
+// add generated code to sourceSets
+// see https://docs.gradle.org/current/dsl/org.gradle.api.tasks.SourceSet.html
+sourceSets {
+    main {
+        java {
+            srcDir("build/__generated__/java")
+        }
+    }
+}
+
+// make compileJava task depend on the codegen task
+// see https://docs.gradle.org/current/userguide/controlling_task_execution.html#sec:adding_dependencies_to_tasks
+tasks["compileJava"].dependsOn(tasks.withType(GenerateEeaaoTask::class.java))
+```
 
 ### Running the Plugin
 

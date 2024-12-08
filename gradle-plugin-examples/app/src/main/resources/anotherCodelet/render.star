@@ -1,9 +1,10 @@
 def main():
     values = eeaao_codegen.loadValues()
     print(values)
-    spec = eeaao_codegen.loadSpecsGlob('json', '*.json')["project.json"]
+    specs = eeaao_codegen.loadSpecsGlob('json', '**')
+    spec = specs["project.json"]
     eeaao_codegen.renderFile(
-        values["javaPackage"].replace(".", "/") + "/ProjectInfoProvider.kt",
-        "ProjectInfoProvider.kt.tmpl",
+        values["javaPackage"].replace(".", "/") + "/ProjectInfoProvider.java",
+        "ProjectInfoProvider.java.tmpl",
         values | spec,
     )
