@@ -37,7 +37,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "org.example.App"
+    mainClass = "com.acme.App"
 }
 
 tasks.named<Test>("test") {
@@ -48,13 +48,23 @@ tasks.named<Test>("test") {
 eeaaoCodegen {
     specDir = "src/main/resources/spec"
     codeletDir = "src/main/resources/codelet"
-    outDir = "src/generated/kotlin"
+    outDir = "build/__generated__/java"
 }
 
 tasks.register<GenerateEeaaoTask>("AnotherCodegenTask") {
     eeaaoCodegen {
         specDir = "src/main/resources/spec"
         codeletDir = "src/main/resources/anotherCodelet"
-        outDir = "src/generated/kotlin"
+        outDir = "build/__generated__/java"
+    }
+}
+
+tasks["compileJava"].dependsOn(tasks.withType(GenerateEeaaoTask::class.java))
+
+sourceSets {
+    main {
+        java {
+            srcDir("build/__generated__/java")
+        }
     }
 }
