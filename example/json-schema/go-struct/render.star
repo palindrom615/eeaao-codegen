@@ -24,3 +24,4 @@ def main():
     renderSpec(specs, "person.schema.json")
     renderSpec(specs, "arrays.schema.json")
     renderSpec(specs, "regex-pattern.schema.json")
+    renderSpec(specs, "complex-object.schema.json")
