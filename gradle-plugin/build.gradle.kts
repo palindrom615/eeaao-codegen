@@ -11,7 +11,7 @@ plugins {
 }
 
 gradlePlugin {
-    website = "https://github.com/palindrom615/eeaao-codegen/gradle-plugin"
+    website = "https://github.com/palindrom615/eeaao-codegen/tree/main/gradle-plugin"
     vcsUrl = "https://github.com/palindrom615/eeaao-codegen.git"
     plugins {
         create("eeaaoCodegenPlugin") {
