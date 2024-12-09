@@ -11,7 +11,7 @@
 {{- else if eq .type "array" -}}
     []{{ include "type-mapping.tmpl" $.items }}
 {{- else if eq .type "object" -}}
-    {{ include "struct.go.tmpl" .properties }}
+    {{ include "struct.go.tmpl" . | indent 4 }}
 {{- else -}}
     any
 {{- end -}}
