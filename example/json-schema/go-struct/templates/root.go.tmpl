@@ -1,3 +1,3 @@
 package __generated__
 
-type {{ title .title }} {{ include "struct.go.tmpl" . }}
+type {{ title .title | nospace }} {{ include "struct.go.tmpl" . }}
