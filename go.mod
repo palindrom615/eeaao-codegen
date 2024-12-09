@@ -12,7 +12,6 @@ require (
 )
 
 require (
-	git.sr.ht/~emersion/go-jsonschema v0.0.0-20230224160153-e0d73b537145 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
