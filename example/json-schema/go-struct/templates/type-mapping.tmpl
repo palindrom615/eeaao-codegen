@@ -1,5 +1,7 @@
 {{- if index . "$ref" -}}
     {{ title (trimPrefix "#/$defs/" (index . "$ref")) }}
+{{- else if eq .type "null" -}}
+    *struct{}
 {{- else if eq .type "string" -}}
     string
 {{- else if eq .type "integer" -}}
