@@ -1,7 +1,8 @@
 io.swagger.v3.oas.annotations.tags.Tag(
-    name = {{ .name }},
-    {{ with .description -}} description = {{ . }}, {{- end }}
-    {{- with .externalDocs }}
+    name = {{ .name | quote }},
+    {{ with .description -}} description = {{ . | quote }},
+    {{ end -}}
+    {{ with .externalDocs -}}
     externalDocs = {{ include "swagger-annotations/ExternalDocumentation.tmpl" . | indent 4 }},
-    {{- end }}
-)
+    {{ end -}}
+){{- "" -}}

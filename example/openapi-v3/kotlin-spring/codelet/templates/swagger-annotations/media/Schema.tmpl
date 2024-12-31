@@ -1,0 +1,12 @@
+{{- $schema := $ -}}
+io.swagger.v3.oas.annotations.media.Schema(
+    {{- with $schema.title }}
+    title = {{ . | quote }},{{ end }}
+    {{- with $schema.description }}
+    description = {{ . | quote }},{{ end }}
+    {{- with $schema.example }}
+    example = {{ . | quote }},{{ end }}
+    {{- with $schema.externalDocs }}
+    externalDocs = {{ include "swagger-annotations/ExternalDocumentation.tmpl" . | indent 4 | trim }},{{ end }}
+)
+{{- "" -}}

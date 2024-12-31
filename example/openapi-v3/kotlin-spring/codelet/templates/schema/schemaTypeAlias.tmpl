@@ -1,0 +1,7 @@
+{{- $schema := $.schema -}}
+{{- $className := $.className -}}
+{{- $javaPackage := $.javaPackage -}}
+{{- $values := loadValues -}}
+
+typealias {{ $className }} = {{ include "schema-mapping.tmpl" $schema }}
+{{- "" -}}

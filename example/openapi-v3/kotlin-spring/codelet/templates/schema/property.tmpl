@@ -1,0 +1,37 @@
+{{- $propertySchema := $.propertySchema -}}
+{{- $propertyName := $.propertyName -}}
+{{- $parentSchema := $.parentSchema -}}
+
+{{- $kotlinNullable := "?" -}}
+{{- if $propertySchema.nullable -}}
+    {{- $kotlinNullable = "?" -}}
+{{- else if (has $propertyName $parentSchema.required) -}}
+    {{- $kotlinNullable = "" -}}
+{{- end -}}
+
+{{- $isInlineSchema := or
+    (hasKey $propertySchema "enum")
+    (hasKey $propertySchema "properties")
+-}}
+
+{{- $isArrayInlineSchema := and (eq $propertySchema.type "array")
+    (or
+        (hasKey $propertySchema.items "enum")
+        (hasKey $propertySchema.items "properties")
+    )
+-}}
+
+{{- $type := print (include "schema-mapping.tmpl" $propertySchema) $kotlinNullable -}}{{ with $propertySchema.default }} = {{ . }}{{end}}
+{{- if $isInlineSchema -}}
+{{- $type = print (include "schema/inlineSchema/innerClassName.tmpl" .) $kotlinNullable }}
+{{- else if $isArrayInlineSchema -}}
+{{- $type = print "List<" (include "schema/inlineSchema/arrayItemInnerClassName.tmpl" .) ">" $kotlinNullable }}
+{{- end -}}
+
+{{- if $isArrayInlineSchema -}}
+@{{ include "swagger-annotations/media/ArraySchema.tmpl" $propertySchema }}
+{{- else -}}
+@{{ include "swagger-annotations/media/Schema.tmpl" $propertySchema }}
+{{- end }}
+val {{ $propertyName }}: {{ $type }},
+{{- "" -}}

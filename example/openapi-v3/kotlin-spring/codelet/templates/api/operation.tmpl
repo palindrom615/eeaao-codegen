@@ -1,0 +1,46 @@
+{{- $operation := .operation -}}
+{{- $path := .path -}}
+{{- $method := .method -}}
+
+{{- $successResponseCode := "200" -}}
+{{- if not (hasKey $operation.responses $successResponseCode) -}}
+    {{- range $responseCode, $_ := $operation.responses -}}
+        {{- if hasPrefix "2" $responseCode -}}
+            {{- $successResponseCode = $responseCode -}}
+            {{- break -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+
+{{- $responseSchema := "" -}}
+{{- if values (index $operation.responses $successResponseCode "content") | first -}}
+    {{- $responseSchema = (index (values (index $operation.responses $successResponseCode "content") | first ) "schema") -}}
+{{- else -}}
+
+{{- end -}}
+
+{{- $functionName := $operation.operationId | camelcase -}}
+
+@RequestMapping("{{ $path }}", method = [RequestMethod.{{ $method | upper }}])
+@{{ include "swagger-annotations/Operation.tmpl" $operation }}
+fun {{ $functionName }}(
+{{- range $parameter := $operation.parameters -}}
+    {{- include "api/parameter.tmpl" (dict "parameter" $parameter "functionName" $functionName) | nindent 4 -}}
+{{- end -}}
+{{- if $operation.requestBody -}}
+    {{- include "api/requestBody.tmpl" $operation | nindent 4 -}}
+{{- end }}
+){{ with $responseSchema }}: {{ include "schema-mapping.tmpl" . }}{{- end -}}
+
+{{- range $parameter := $operation.parameters -}}
+    {{- $parameterSchema := $parameter.schema -}}
+    {{- if or (hasKey $parameterSchema "properties") (hasKey $parameterSchema "enum") -}}
+        {{- $className := include "api/parameterInnerClassName.tmpl" (dict "functionName" $functionName "parameterName" $parameter.name) -}}
+        {{- include "schema/schemaClass.tmpl" (dict "schema" $parameterSchema "className" $className) | nindent 0 -}}
+    {{- else if eq $parameterSchema.type "array" -}}
+        {{- if or (hasKey $parameterSchema.items "properties") (hasKey $parameterSchema.items "enum") -}}
+            {{- $className := print (include "api/parameterArrayItemInnerClassName.tmpl" (dict "functionName" $functionName "parameterName" $parameter.name)) -}}
+            {{- include "schema/schemaClass.tmpl" (dict "schema" $parameterSchema.items "className" $className ) | nindent 0 -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}

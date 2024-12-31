@@ -1,0 +1,13 @@
+{{- $schema := $.schema -}}
+
+{{ if hasKey $schema "enum" -}}
+@{{ include "swagger-annotations/media/Schema.tmpl" $schema }}
+@Generated("dev.palindrom615.eeaao.EeaaoCodegen")
+    {{- include "schema/schemaEnumClass.tmpl" $ | nindent 0 -}}
+{{- else if eq $schema.type "object" -}}
+@{{ include "swagger-annotations/media/Schema.tmpl" $schema }}
+@Generated("dev.palindrom615.eeaao.EeaaoCodegen")
+    {{- include "schema/schemaDataClass.tmpl" $ | nindent 0 -}}
+{{- else -}}
+    {{- include "schema/schemaTypeAlias.tmpl" $ | nindent 0 -}}
+{{- end -}}

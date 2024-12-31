@@ -1,0 +1,8 @@
+{{- $requestBody := .requestBody -}}
+io.swagger.v3.oas.annotations.parameters.RequestBody(
+    {{- with $requestBody.description -}}description = {{ quote . }},
+{{- end -}}
+    {{- with $requestBody.required -}}required = {{ . }},
+{{- end -}}
+)
+{{- "" -}}

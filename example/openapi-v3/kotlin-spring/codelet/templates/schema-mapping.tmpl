@@ -1,1 +1,44 @@
-{{ index . "$ref" }}
+{{- $values := loadValues -}}
+{{- $predefinedComponentSchema := $values.predefinedComponentSchema -}}
+{{- $type := .type -}}
+{{- $format := .format -}}
+{{- if hasKey . "$ref" }}
+    {{- $ref := (index . "$ref") -}}
+    {{- if not (hasPrefix "#/components/schemas/" $ref) -}}
+        {{- fail (printf "ref %s is not yet supported" $ref) -}}
+    {{- end -}}
+    {{- $componentSchema := trimPrefix "#/components/schemas/" $ref -}}
+    {{- if hasKey $predefinedComponentSchema $componentSchema -}}
+        {{- index $predefinedComponentSchema $componentSchema -}}
+    {{- else -}}
+        {{- $componentSchema -}}
+    {{- end -}}
+{{- else if hasKey . "type" -}}
+    {{- if eq $type "string" -}}
+        {{- if eq $format "date-time" -}}
+            java.time.LocalDateTime
+        {{- else if eq $format "date" -}}
+            java.time.LocalDate
+        {{- else -}}
+            String
+        {{- end -}}
+    {{- else if eq $type "integer" -}}
+        {{- if eq $format "int64" -}}
+            Long
+        {{- else -}}
+            Int
+        {{- end -}}
+    {{- else if eq $type "number" -}}
+        Double
+    {{- else if eq $type "boolean" -}}
+        Boolean
+    {{- else if eq $type "array" -}}
+        List<{{ include "schema-mapping.tmpl" .items }}>
+    {{- else if eq $type "object" -}}
+        {{ .title | default "Map<String, Any>" }}
+    {{- else -}}
+        Any
+    {{- end -}}
+{{- else -}}
+Any
+{{- end -}}

@@ -1,0 +1,20 @@
+{{- $propertyName := $.propertyName -}}
+{{- $propertySchema := $.propertySchema -}}
+{{- $parentSchema := $.parentSchema -}}
+
+{{- $type := include "schema-mapping.tmpl" $propertySchema  -}}
+{{- if and (eq $propertySchema.type "string") (eq $propertySchema.format "binary") -}}
+{{- $type = "org.springframework.web.multipart.MultipartFile" -}}
+{{- end -}}
+
+{{- $kotlinNullable := "?" -}}
+{{- if $propertySchema.nullable -}}
+    {{- $kotlinNullable = "?" -}}
+{{- else if (has $propertyName $parentSchema.required) -}}
+    {{- $kotlinNullable = "" -}}
+{{- end -}}
+
+@org.springframework.web.bind.annotation.RequestPart("{{ $propertyName }}")
+@{{ include "swagger-annotations/media/Schema.tmpl" $propertySchema }}
+{{ $propertyName }}: {{ $type }}{{ $kotlinNullable }},
+{{- "" -}}

@@ -1,0 +1,10 @@
+{{- $schema := $.schema -}}
+{{- $className := $.className -}}
+{{- $javaPackage := $.javaPackage -}}
+{{- $values := loadValues -}}
+
+package {{ .javaPackage }}
+
+import javax.annotation.Generated
+
+{{ include "schema/schemaClass.tmpl" $ -}}

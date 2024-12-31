@@ -24,9 +24,6 @@ io.swagger.v3.oas.annotations.Parameter(
     {{ with .allowReserved -}}
     allowReserved = {{ . }},
     {{- end -}}
-    {{ with .schema -}}
-    schema = {{ template "swagger-annotations/Schema.tmpl" .schema }},
-    {{- end -}}
     {{ with .array -}}
     array = {{ template "swagger-annotations/ArraySchema.tmpl" .array }},
     {{- end -}}
@@ -61,3 +58,4 @@ io.swagger.v3.oas.annotations.Parameter(
     ref = {{ quote . }},
     {{- end -}}
 )
+{{- "" -}}

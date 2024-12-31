@@ -1,0 +1,7 @@
+{{- $requestBody := .requestBody -}}
+
+{{- $schema := index $requestBody.content "multipart/form-data" "schema" -}}
+
+{{- range $propertyName, $propertySchema := $schema.properties -}}
+    {{- include "api/multipartFormDataRequestBodyProperty.tmpl" (dict "propertyName" $propertyName "propertySchema" $propertySchema "parentSchema" $schema) | nindent 0 -}}
+{{- end -}}

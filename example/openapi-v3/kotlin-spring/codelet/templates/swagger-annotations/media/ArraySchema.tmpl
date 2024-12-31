@@ -1,0 +1,11 @@
+{{- $schema := $ -}}
+io.swagger.v3.oas.annotations.media.ArraySchema(
+    arraySchema = {{ include "swagger-annotations/media/Schema.tmpl" . | indent 4 | trim }},
+    {{- with $schema.minItems }}
+    minItems = {{ . }},{{ end }}
+    {{- with $schema.maxItems }}
+    maxItems = {{ . }},{{ end }}
+    {{- with $schema.uniqueItems }}
+    uniqueItems = {{ . }},{{ end }}
+)
+{{- "" -}}

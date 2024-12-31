@@ -1,0 +1,51 @@
+{{- $parameter := .parameter  -}}
+{{- $functionName := .functionName -}}
+
+{{- $parameterName := $parameter.name | camelcase -}}
+{{- $parameterSchema := $parameter.schema -}}
+
+{{- $isInlineSchema := or
+    (hasKey $parameterSchema "enum")
+    (hasKey $parameterSchema "properties")
+-}}
+
+{{- $isArrayInlineSchema := and (eq $parameterSchema.type "array")
+    (or
+        (hasKey $parameterSchema.items "enum")
+        (hasKey $parameterSchema.items "properties")
+    )
+-}}
+
+{{- $kotlinNullable := ternary "" "?" (or $parameter.required (default false $parameter.schema.nullable)) -}}
+
+{{- $type := print (include "schema-mapping.tmpl" $parameterSchema) $kotlinNullable -}}{{ with $parameterSchema.default }} = {{ . }}{{end}}
+{{- if $isInlineSchema -}}
+    {{- $type = print (include "api/parameterInnerClassName.tmpl" (dict "functionName" $functionName "parameterName" $parameter.name)) $kotlinNullable }}
+{{- else if $isArrayInlineSchema -}}
+    {{- $type = print "List<" (include "api/parameterArrayItemInnerClassName.tmpl" (dict "functionName" $functionName "parameterName" $parameter.name)) ">" $kotlinNullable }}
+{{- end -}}
+
+{{- if eq $parameter.in "path" -}}
+@org.springframework.web.bind.annotation.PathVariable("{{ $parameter.name }}")
+{{- else if eq $parameter.in "query" -}}
+@org.springframework.web.bind.annotation.RequestParam(
+    "{{ $parameter.name }}",
+    required = {{ $parameter.required }},
+    {{- with $parameter.schema.default }}defaultValue = {{ . | quote }},{{ end }}
+)
+{{- else if eq $parameter.in "header" -}}
+@org.springframework.web.bind.annotation.RequestHeader(
+    "{{ $parameter.name }}",
+    required = {{ $parameter.required }},
+    {{- with $parameter.schema.default }}defaultValue = {{ . | quote }},{{ end }}
+)
+{{- else if eq $parameter.in "cookie" -}}
+@org.springframework.web.bind.annotation.CookieValue(
+    "{{ $parameter.name }}",
+    required = {{ $parameter.required }},
+    {{- with $parameter.schema.default }}defaultValue = {{ . | quote }},{{ end }}
+)
+{{- end }}
+@{{ include "swagger-annotations/Parameter.tmpl" $parameter }}
+{{ $parameterName }}: {{ $type }},
+{{- "" -}}

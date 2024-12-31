@@ -1,1 +1,3 @@
 javaPackage: dev.palindrom615
+predefinedComponentSchema:
+  Error: com.example.Error

@@ -1,0 +1,11 @@
+{{- $requestBody := .requestBody -}}
+
+{{- $schema := index $requestBody.content "application/json" "schema" -}}
+{{- $parameterType := include "schema-mapping.tmpl" $schema -}}
+
+{{- $kotlinNullable := ternary "" "?" (or $requestBody.required (default false $schema.nullable)) -}}
+
+@org.springframework.web.bind.annotation.RequestBody(required = {{ $requestBody.required }})
+@{{ include "swagger-annotations/RequestBody.tmpl" . }}
+requestBody: {{ $parameterType }}{{ $kotlinNullable }},
+{{- "" -}}

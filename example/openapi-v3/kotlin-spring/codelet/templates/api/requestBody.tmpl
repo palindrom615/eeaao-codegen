@@ -1,0 +1,9 @@
+{{- $requestBody := .requestBody -}}
+
+{{- if hasKey $requestBody.content "application/json" -}}
+{{- include "api/applicationJsonRequestBody.tmpl" . -}}
+{{- else if hasKey $requestBody.content "multipart/form-data" -}}
+    {{- include "api/multipartFormDataRequestBody.tmpl" . -}}
+{{- else -}}
+    {{- fail "content other than application/json or multipart/form-data is not yet supported" -}}
+{{- end -}}

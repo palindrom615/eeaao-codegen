@@ -12,12 +12,32 @@ def getTags(spec):
 
 def main():
     values = eeaao_codegen.loadValues()
-    print(values)
-    spec = eeaao_codegen.loadSpecFile('json', 'petstore.json')
-    tags = getTags(spec)
-    for t in tags:
-        eeaao_codegen.renderFile(
-            t["name"].title() + "Api.kt",
-            "Api.kt.tmpl",
-            {"spec": spec, "tag": t}
-        )
+    predefinedComponentSchema = values.get("predefinedComponentSchema")
+    baseJavaPackage = values.get("javaPackage")
+    baseDirectory = baseJavaPackage.replace(".", "/")
+    def genApi(api):
+        directory = baseDirectory + "/" + api
+        spec = eeaao_codegen.loadSpecFile('openapi', api + '.json')
+        schemas = spec.get("components", {}).get("schemas", {})
+        for name, schema in schemas.items():
+            if name in predefinedComponentSchema:
+                continue
+            className = name
+            javaPackage = baseJavaPackage + "." + api + ".schema"
+            renderFile = directory + "/schema/" + className + ".kt"
+            eeaao_codegen.renderFile(
+                directory + "/schema/" + className + ".kt",
+                "Schema.kt.tmpl",
+                {"className": className, "javaPackage": javaPackage, "schema": schema}
+            )
+            print(name)
+        tags = getTags(spec)
+        for t in tags:
+            className = t["name"].title().replace("/", "_") + "Api"
+            javaPackage = baseJavaPackage + "." + api
+            eeaao_codegen.renderFile(
+                directory + "/" + className + ".kt",
+                "Api.kt.tmpl",
+                {"className": className, "javaPackage": javaPackage, "spec": spec, "tag": t, }
+            )
+    genApi("petstore")

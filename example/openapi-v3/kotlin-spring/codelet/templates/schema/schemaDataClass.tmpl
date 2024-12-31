@@ -1,0 +1,21 @@
+{{- $schema := $.schema -}}
+{{- $className := $.className -}}
+
+data class {{ $className }}(
+{{- range $propertyName, $propertySchema := $schema.properties }}
+    {{- include "schema/property.tmpl" (dict "propertySchema" $propertySchema "propertyName" $propertyName "parentSchema" $.schema) | nindent 4 -}}
+{{- end }}
+) {
+    {{- range $propertyName, $propertySchema := $schema.properties -}}
+        {{- if or (hasKey $propertySchema "properties") (hasKey $propertySchema "enum") -}}
+            {{- $className := include "schema/inlineSchema/innerClassName.tmpl" (dict "propertyName" $propertyName) -}}
+            {{- include "schema/schemaClass.tmpl" (dict "schema" $propertySchema "className" $className) | nindent 4 -}}
+        {{- else if eq $propertySchema.type "array" -}}
+            {{- if or (hasKey $propertySchema.items "properties") (hasKey $propertySchema.items "enum") -}}
+                {{- $className := include "schema/inlineSchema/arrayItemInnerClassName.tmpl" (dict "propertyName" $propertyName) -}}
+                {{- include "schema/schemaClass.tmpl" (dict "schema" $propertySchema.items "className" $className ) | nindent 4 -}}
+            {{- end -}}
+        {{- end -}}
+    {{- end }}
+}
+{{- "" -}}

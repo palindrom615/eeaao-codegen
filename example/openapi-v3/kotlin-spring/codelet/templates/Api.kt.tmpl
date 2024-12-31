@@ -1,26 +1,23 @@
 {{- $spec := $.spec -}}
 {{- $tag := $.tag -}}
+{{- $className := $.className -}}
 {{- $values := loadValues -}}
-package {{ $values.javaPackage }}
+package {{ .javaPackage }}
 
+import {{ .javaPackage }}.schema.*
 import javax.annotation.Generated
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
 
 @Generated("dev.palindrom615.eeaao.EeaaoCodegen")
 @{{ include "swagger-annotations/Tag.tmpl" $tag }}
-interface {{ title $tag.name }}Api {
+interface `{{ $className }}` {
 {{- range $path, $pathSpec := .spec.paths -}}
-{{- range $method, $operation := $pathSpec -}}
-    {{- if not (has $tag.name $operation.tags) -}}
-        {{- continue -}}
-    {{- end }}
-    @{{ include "swagger-annotations/Operation.tmpl" $operation | indent 4 | trim }}
-    @org.springframework.web.bind.annotation.GetMapping("{{ $path }}")
-    fun {{ $operation.operationId }}(
-        {{- range $parameter := $operation.parameters -}}
-        @{{ include "swagger-annotations/Parameter.tmpl" $parameter }}
-        {{ $parameter.name }}: {{ $parameter.schema.type }} = {{ $parameter.schema.default }},
-        {{- end }}
-    ){{- with index $operation.responses "200" -}}: {{ include "schema-mapping.tmpl"  (index .content "application/json" "schema") }}; {{- end }}
-{{- end -}}
-{{- end -}}
+    {{- range $method, $operation := $pathSpec -}}
+        {{- if not (has $tag.name $operation.tags) -}}
+            {{- continue -}}
+        {{- end -}}
+        {{- include "api/operation.tmpl" (dict "operation" $operation "path" $path "method" $method) | nindent 4 -}}
+    {{- end -}}
+{{- end }}
 }

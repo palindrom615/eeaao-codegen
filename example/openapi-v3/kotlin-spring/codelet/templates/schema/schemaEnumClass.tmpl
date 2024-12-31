@@ -1,0 +1,12 @@
+{{- $schema := $.schema -}}
+{{- $className := $.className -}}
+{{- $values := loadValues -}}
+
+enum class {{ $className }}(
+    @com.fasterxml.jackson.annotation.JsonValue
+    val value: {{ include "schema-mapping.tmpl" $schema }}
+) {
+{{- range $value := $schema.enum }}
+    `{{$value | camelcase }}` (value = "{{$value}}"),{{- end }}
+}
+{{- "" -}}
