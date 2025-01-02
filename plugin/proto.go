@@ -26,6 +26,10 @@ func NewProtobufPlugin() *ProtobufPlugin {
 	return &ProtobufPlugin{handler: handler, client: http.DefaultClient}
 }
 
+func (p *ProtobufPlugin) Name() string {
+	return "protobuf"
+}
+
 func (p *ProtobufPlugin) LoadSpecFile(path string) (SpecData, error) {
 	reader, err := os.Open(path)
 	if err != nil {

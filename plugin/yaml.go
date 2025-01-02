@@ -11,6 +11,10 @@ type YamlPlugin struct {
 	client *http.Client
 }
 
+func (y *YamlPlugin) Name() string {
+	return "yaml"
+}
+
 func NewYamlPlugin() *YamlPlugin {
 	return &YamlPlugin{client: http.DefaultClient}
 }

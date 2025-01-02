@@ -9,6 +9,10 @@ type OpenApiPlugin struct {
 	yamlPlugin *YamlPlugin
 }
 
+func (o *OpenApiPlugin) Name() string {
+	return "openapi"
+}
+
 func (o *OpenApiPlugin) LoadSpecFile(path string) (SpecData, error) {
 	file, err := o.jsonPlugin.LoadSpecFile(path)
 	if err != nil {

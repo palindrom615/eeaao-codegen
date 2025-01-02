@@ -15,6 +15,10 @@ func NewJsonPlugin() *JsonPlugin {
 	return &JsonPlugin{client: http.DefaultClient}
 }
 
+func (j *JsonPlugin) Name() string {
+	return "json"
+}
+
 func (j *JsonPlugin) LoadSpecFile(path string) (SpecData, error) {
 	f, err := os.Open(path)
 	if err != nil {

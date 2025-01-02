@@ -17,6 +17,9 @@ import (
 type SpecData any
 
 type Plugin interface {
+	// Name returns the name of the plugin
+	// The name should be unique among the plugins.
+	Name() string
 	LoadSpecFile(path string) (SpecData, error)
 	LoadSpec(reader io.Reader) (SpecData, error)
 	LoadSpecUrl(url string) (SpecData, error)
