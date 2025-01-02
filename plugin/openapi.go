@@ -24,3 +24,11 @@ func (o *OpenApiPlugin) LoadSpec(reader io.Reader) (SpecData, error) {
 	}
 	return specdata, nil
 }
+
+func (o *OpenApiPlugin) LoadSpecUrl(url string) (SpecData, error) {
+	specdata, err := o.jsonPlugin.LoadSpecUrl(url)
+	if err != nil {
+		return o.yamlPlugin.LoadSpecUrl(url)
+	}
+	return specdata, nil
+}
