@@ -37,8 +37,8 @@ build-gradle-plugin:
     ./gradlew build {{gradle_opts}}
 
 [group("gradle-plugin")]
-publish-gradle-plugin VERSION="": build-gradle-plugin
+publish-gradle-plugin: build-gradle-plugin
     #!/usr/bin/env bash
     set -euxo pipefail
     cd ./gradle-plugin
-    ./gradlew publishPlugins {{gradle_opts}} -Pversion={{VERSION}}
+    ./gradlew publishPlugins {{gradle_opts}}
