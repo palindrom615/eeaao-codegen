@@ -17,14 +17,6 @@ import (
 // HelperFuncs defines the helper functions for codelet.
 // The functions should be exposed to go/template and starlark built-ins for codelet.
 type HelperFuncs interface {
-	// LoadSpecFile loads plugin.SpecData from filePath with plugin of pluginName
-	// filePath is relative path from spec directory
-	LoadSpecFile(pluginName string, filePath string) (plugin.SpecData, error)
-	// LoadSpecsGlob loads specs from the given glob pattern in the spec directory.
-	// pluginName: the plugin name to load the specs
-	// glob: the glob pattern to search for specs
-	// returns a map of spec file path and spec content as json encoded string.
-	LoadSpecsGlob(pluginName string, glob string) (specs map[string]plugin.SpecData, err error)
 	// RenderFile renders a file with the given template and data
 	// filePath: the file path to render. The path is relative to the output directory.
 	// templatePath: the template path. The path is relative to the ${codeletdir}/templates directory.
@@ -47,8 +39,6 @@ type HelperFuncs interface {
 // for use with template.
 //
 // The resulting FuncMap includes the following functions:
-//   - loadSpecFile: HelperFuncs.LoadSpecFile
-//   - loadSpecsGlob: HelperFuncs.LoadSpecsGlob
 //   - renderFile: HelperFuncs.RenderFile
 //   - loadValues: HelperFuncs.LoadValues
 //   - include: HelperFuncs.Include
@@ -57,12 +47,10 @@ type HelperFuncs interface {
 // Additionally, it incorporates the sprig.FuncMap for extended functionality.
 func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 	funcmap := template.FuncMap{
-		"loadSpecFile":  h.LoadSpecFile,
-		"loadSpecsGlob": h.LoadSpecsGlob,
-		"renderFile":    h.RenderFile,
-		"loadValues":    h.LoadValues,
-		"include":       h.Include,
-		"getPlugin":     h.GetPlugin,
+		"renderFile": h.RenderFile,
+		"loadValues": h.LoadValues,
+		"include":    h.Include,
+		"getPlugin":  h.GetPlugin,
 	}
 	maps.Copy(funcmap, sprig.FuncMap())
 	return funcmap
@@ -71,8 +59,6 @@ func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 // ToStarlarkModule exposes the helper functions to starlarkstruct.Module.
 //
 // The module provides the following functions:
-//   - loadSpecFile(pluginName: str, filepath: str) -> any
-//   - loadSpecsGlob(pluginName: str, glob: str) -> dict[str, any]
 //   - renderFile(filePath: str, templatePath: str, data: any) -> str
 //   - loadValues() -> dict[str, any]
 //   - getPlugin(pluginName: str) -> EeaaoPlugin
@@ -83,47 +69,6 @@ func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 // `eeaao_codegen.loadValues` is called in starlark script, the map[string]any is first encoded
 // using json.Marshal and then decoded as starlark.Dict by `json.decode`.
 func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
-	loadSpecFile := starlark.NewBuiltin(
-		"loadSpecFile",
-		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-			var (
-				pluginName, filepath starlark.String
-			)
-			if err := starlark.UnpackArgs("loadSpecFile", args, kwargs, "pluginName", &pluginName, "filepath", &filepath); err != nil {
-				return nil, err
-			}
-			spec, err := h.LoadSpecFile(string(pluginName), string(filepath))
-			if err != nil {
-				return nil, err
-			}
-			return convertToStarlarkValue(thread, spec)
-		},
-	)
-	loadSpecsGlob := starlark.NewBuiltin(
-		"loadSpecsGlob",
-		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-			var (
-				pluginName, glob starlark.String
-			)
-			if err := starlark.UnpackArgs("loadSpecsGlob", args, kwargs, "pluginName", &pluginName, "glob", &glob); err != nil {
-				return nil, err
-			}
-			specsLoaded, err := h.LoadSpecsGlob(string(pluginName), string(glob))
-			if err != nil {
-				return nil, err
-			}
-
-			specs := starlark.NewDict(len(specsLoaded))
-			for path, spec := range specsLoaded {
-				decoded, err := convertToStarlarkValue(thread, spec)
-				if err != nil {
-					log.Printf("Error decoding spec file '%s': %v\n", path, err)
-				}
-				specs.SetKey(starlark.String(path), decoded)
-			}
-			return specs, nil
-		},
-	)
 	renderFile := starlark.NewBuiltin(
 		"renderFile",
 		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
@@ -146,15 +91,7 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 			return starlark.String(dst), nil
 		},
 	)
-	loadValues := starlark.NewBuiltin(
-		"loadValues",
-		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-			if err := starlark.UnpackArgs("loadValues", args, kwargs); err != nil {
-				return nil, err
-			}
-			return convertToStarlarkValue(thread, h.LoadValues())
-		},
-	)
+
 	getPlugin := starlark.NewBuiltin(
 		"getPlugin",
 		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
@@ -171,14 +108,21 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 			return starlarkbridge.NewPluginStarlark(p), nil
 		},
 	)
+	loadValues := starlark.NewBuiltin(
+		"loadValues",
+		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+			if err := starlark.UnpackArgs("loadValues", args, kwargs); err != nil {
+				return nil, err
+			}
+			return convertToStarlarkValue(thread, h.LoadValues())
+		},
+	)
 	return &starlarkstruct.Module{
 		Name: "eeaao_codegen",
 		Members: starlark.StringDict{
-			"loadSpecFile":  loadSpecFile,
-			"loadSpecsGlob": loadSpecsGlob,
-			"renderFile":    renderFile,
-			"loadValues":    loadValues,
-			"getPlugin":     getPlugin,
+			"renderFile": renderFile,
+			"loadValues": loadValues,
+			"getPlugin":  getPlugin,
 		},
 	}
 }

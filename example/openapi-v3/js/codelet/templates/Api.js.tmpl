@@ -1,0 +1,15 @@
+export const {{ .info.title | camelcase }}Api = {
+{{- range $path, $pathSpec := .paths }}
+    {{- range $method, $methodSpec := $pathSpec }}
+        {{ $methodSpec.operationId }}: (data) => {
+            return fetch("{{ $path }}", {
+                method: "{{ $method }}",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+        },
+    {{- end }}
+{{- end }}
+}
