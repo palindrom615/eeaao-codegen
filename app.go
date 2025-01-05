@@ -1,6 +1,7 @@
 package eeaao_codegen
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/palindrom615/eeaao-codegen/plugin"
 	"gopkg.in/yaml.v3"
@@ -125,4 +126,55 @@ func (a *App) populateTemplate() {
 		}
 		return nil
 	})
+}
+
+// RenderFile renders a file with the given template and data
+// filePath: the file path to render. The path is relative to the output directory.
+// templatePath: the template path. The path is relative to the ${codeletdir}/templates directory.
+// data: the data to render
+// returns the destination file path.
+func (a *App) RenderFile(filePath string, templatePath string, data any) (dst string, err error) {
+	if !filepath.IsLocal(filePath) {
+		log.Printf("invalid filePath: %s", filePath)
+		return "", nil
+	}
+	if !filepath.IsLocal(templatePath) {
+		log.Printf("invalid templatePath: %s", templatePath)
+		return "", nil
+	}
+	dst = filepath.Join(a.OutDir, filePath)
+	os.MkdirAll(filepath.Dir(dst), os.ModePerm)
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		log.Printf("Error creating file '%s': %v\n", dst, err)
+		return "", err
+	}
+	err = a.tmpl.ExecuteTemplate(dstFile, templatePath, data)
+	if err != nil {
+		return "", err
+	}
+	return filePath, nil
+}
+
+// LoadValues returns the values data from codelet's default values.yaml file and given values file.
+func (a *App) LoadValues() map[string]any {
+	return a.Values
+}
+
+// GetPlugin returns the plugin with the given name.
+func (a *App) GetPlugin(pluginName string) plugin.Plugin {
+	return a.plugins.GetPlugin(pluginName)
+}
+
+// Include renders a template with the given data.
+//
+// Drop-in replacement for template pipeline, but with a string return value so that it can be treated as a string in the template.
+//
+// Inspired by [helm include function](https://helm.sh/docs/chart_template_guide/named_templates/#the-include-function)
+func (a *App) Include(templatePath string, data interface{}) (string, error) {
+	buf := bytes.NewBuffer(nil)
+	if err := a.tmpl.ExecuteTemplate(buf, templatePath, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }

@@ -77,3 +77,13 @@ func (s *starlarkRunner) RunShell() {
 		s.predefined,
 	)
 }
+
+func (s *starlarkRunner) EvalExpression(expr string) (starlark.Value, error) {
+	return starlark.EvalOptions(
+		s.fileOptions,
+		s.thread,
+		"expression",
+		expr,
+		s.predefined,
+	)
+}

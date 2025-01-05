@@ -6,7 +6,9 @@
 
 package plugin
 
-import "io"
+import (
+	"io"
+)
 
 // SpecData represent the data of a specification. it can be any type, depending on the plugin. For example, OpenAPI plugin uses go-openapi/loads.Spec() to load a spec file.
 //
@@ -15,6 +17,12 @@ import "io"
 type SpecData any
 
 type Plugin interface {
+	// Name returns the name of the plugin
+	// The name should be unique among the plugins.
+	Name() string
+	// LoadSpecFile loads a spec file from the given path.
+	// The path is absolute path or relative from current working directory(not from `render.star`) to the spec file.
 	LoadSpecFile(path string) (SpecData, error)
 	LoadSpec(reader io.Reader) (SpecData, error)
+	LoadSpecUrl(url string) (SpecData, error)
 }

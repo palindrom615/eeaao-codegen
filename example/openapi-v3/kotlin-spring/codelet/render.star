@@ -12,12 +12,13 @@ def getTags(spec):
 
 def main():
     values = eeaao_codegen.loadValues()
+    openapiPlugin = eeaao_codegen.getPlugin("openapi")
     predefinedComponentSchema = values.get("predefinedComponentSchema")
     baseJavaPackage = values.get("javaPackage")
     baseDirectory = baseJavaPackage.replace(".", "/")
     def genApi(api):
         directory = baseDirectory + "/" + api
-        spec = eeaao_codegen.loadSpecFile('openapi', api + '.json')
+        spec = openapiPlugin.loadSpecFile("../spec/" + api + '.json')
         schemas = spec.get("components", {}).get("schemas", {})
         for name, schema in schemas.items():
             if name in predefinedComponentSchema:

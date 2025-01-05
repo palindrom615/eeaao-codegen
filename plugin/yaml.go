@@ -3,10 +3,20 @@ package plugin
 import (
 	"gopkg.in/yaml.v3"
 	"io"
+	"net/http"
 	"os"
 )
 
 type YamlPlugin struct {
+	client *http.Client
+}
+
+func (y *YamlPlugin) Name() string {
+	return "yaml"
+}
+
+func NewYamlPlugin() *YamlPlugin {
+	return &YamlPlugin{client: http.DefaultClient}
 }
 
 func (y *YamlPlugin) LoadSpecFile(path string) (SpecData, error) {
@@ -24,4 +34,17 @@ func (y *YamlPlugin) LoadSpec(reader io.Reader) (SpecData, error) {
 		return nil, err
 	}
 	return specData, nil
+}
+
+func (y *YamlPlugin) LoadSpecUrl(url string) (SpecData, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/yaml,application/x-yaml,text/yaml")
+	res, err := y.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return y.LoadSpec(res.Body)
 }
