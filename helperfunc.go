@@ -4,7 +4,6 @@ package eeaao_codegen
 import (
 	"encoding/json"
 	"github.com/Masterminds/sprig"
-	"github.com/palindrom615/eeaao-codegen/plugin"
 	"github.com/palindrom615/eeaao-codegen/starlarkbridge"
 	json2 "go.starlark.net/lib/json"
 	"go.starlark.net/starlark"
@@ -14,49 +13,28 @@ import (
 	"text/template"
 )
 
-// HelperFuncs defines the helper functions for codelet.
-// The functions should be exposed to go/template and starlark built-ins for codelet.
-type HelperFuncs interface {
-	// RenderFile renders a file with the given template and data
-	// filePath: the file path to render. The path is relative to the output directory.
-	// templatePath: the template path. The path is relative to the ${codeletdir}/templates directory.
-	// data: the data to render
-	// returns the destination file path.
-	RenderFile(filePath string, templatePath string, data any) (dst string, err error)
-	// LoadValues returns the values data from codelet's default values.yaml file and given values file.
-	LoadValues() (config map[string]any)
-	// GetPlugin returns the plugin with the given name.
-	GetPlugin(pluginName string) plugin.Plugin
-	// Include renders a template with the given data.
-	//
-	// Drop-in replacement for template pipeline, but with a string return value so that it can be treated as a string in the template.
-	//
-	// Inspired by [helm include function](https://helm.sh/docs/chart_template_guide/named_templates/#the-include-function)
-	Include(templatePath string, data interface{}) (string, error)
-}
-
 // ToTemplateFuncmap converts the helper functions into a template.FuncMap
 // for use with template.
 //
 // The resulting FuncMap includes the following functions:
-//   - renderFile: HelperFuncs.RenderFile
-//   - loadValues: HelperFuncs.LoadValues
-//   - include: HelperFuncs.Include
-//   - getPlugin: HelperFuncs.GetPlugin
+//   - renderFile: App.RenderFile
+//   - loadValues: App.LoadValues
+//   - include: App.Include
+//   - getPlugin: App.GetPlugin
 //
 // Additionally, it incorporates the sprig.FuncMap for extended functionality.
-func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
+func ToTemplateFuncmap(a *App) template.FuncMap {
 	funcmap := template.FuncMap{
-		"renderFile": h.RenderFile,
-		"loadValues": h.LoadValues,
-		"include":    h.Include,
-		"getPlugin":  h.GetPlugin,
+		"renderFile": a.RenderFile,
+		"loadValues": a.LoadValues,
+		"include":    a.Include,
+		"getPlugin":  a.GetPlugin,
 	}
 	maps.Copy(funcmap, sprig.FuncMap())
 	return funcmap
 }
 
-// ToStarlarkModule exposes the helper functions to starlarkstruct.Module.
+// ToStarlarkModule exposes the App's functions to starlarkstruct.Module.
 //
 // The module provides the following functions:
 //   - renderFile(filePath: str, templatePath: str, data: any) -> str
@@ -65,10 +43,10 @@ func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 //
 // due to the limitation of interoperability between Go and Starlark, JSON encoding is used internally.
 //
-// For example, HelperFuncs.LoadValues() returns a map[string]any. When
+// For example, App.LoadValues() returns a map[string]any. When
 // `eeaao_codegen.loadValues` is called in starlark script, the map[string]any is first encoded
 // using json.Marshal and then decoded as starlark.Dict by `json.decode`.
-func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
+func ToStarlarkModule(app *App) *starlarkstruct.Module {
 	renderFile := starlark.NewBuiltin(
 		"renderFile",
 		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
@@ -84,7 +62,7 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 				log.Printf("Error decoding starlark injected data: %v\n%v\n", data, err)
 				return nil, err
 			}
-			dst, err := h.RenderFile(string(filePath), string(templatePath), d)
+			dst, err := app.RenderFile(string(filePath), string(templatePath), d)
 			if err != nil {
 				return nil, err
 			}
@@ -101,7 +79,7 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 			if err := starlark.UnpackArgs("getPlugin", args, kwargs, "pluginName", &pluginName); err != nil {
 				return nil, err
 			}
-			p := h.GetPlugin(string(pluginName))
+			p := app.GetPlugin(string(pluginName))
 			if p == nil {
 				return starlark.None, nil
 			}
