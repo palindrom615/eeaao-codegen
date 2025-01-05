@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/Masterminds/sprig"
 	"github.com/palindrom615/eeaao-codegen/plugin"
+	"github.com/palindrom615/eeaao-codegen/starlarkbridge"
 	json2 "go.starlark.net/lib/json"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
@@ -32,6 +33,8 @@ type HelperFuncs interface {
 	RenderFile(filePath string, templatePath string, data any) (dst string, err error)
 	// LoadValues returns the values data from codelet's default values.yaml file and given values file.
 	LoadValues() (config map[string]any)
+	// GetPlugin returns the plugin with the given name.
+	GetPlugin(pluginName string) plugin.Plugin
 	// Include renders a template with the given data.
 	//
 	// Drop-in replacement for template pipeline, but with a string return value so that it can be treated as a string in the template.
@@ -48,6 +51,8 @@ type HelperFuncs interface {
 //   - loadSpecsGlob: HelperFuncs.LoadSpecsGlob
 //   - renderFile: HelperFuncs.RenderFile
 //   - loadValues: HelperFuncs.LoadValues
+//   - include: HelperFuncs.Include
+//   - getPlugin: HelperFuncs.GetPlugin
 //
 // Additionally, it incorporates the sprig.FuncMap for extended functionality.
 func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
@@ -57,6 +62,7 @@ func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 		"renderFile":    h.RenderFile,
 		"loadValues":    h.LoadValues,
 		"include":       h.Include,
+		"getPlugin":     h.GetPlugin,
 	}
 	maps.Copy(funcmap, sprig.FuncMap())
 	return funcmap
@@ -69,6 +75,7 @@ func ToTemplateFuncmap(h HelperFuncs) template.FuncMap {
 //   - loadSpecsGlob(pluginName: str, glob: str) -> dict[str, any]
 //   - renderFile(filePath: str, templatePath: str, data: any) -> str
 //   - loadValues() -> dict[str, any]
+//   - getPlugin(pluginName: str) -> EeaaoPlugin
 //
 // due to the limitation of interoperability between Go and Starlark, JSON encoding is used internally.
 //
@@ -148,6 +155,22 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 			return convertToStarlarkValue(thread, h.LoadValues())
 		},
 	)
+	getPlugin := starlark.NewBuiltin(
+		"getPlugin",
+		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+			var (
+				pluginName starlark.String
+			)
+			if err := starlark.UnpackArgs("getPlugin", args, kwargs, "pluginName", &pluginName); err != nil {
+				return nil, err
+			}
+			p := h.GetPlugin(string(pluginName))
+			if p == nil {
+				return starlark.None, nil
+			}
+			return starlarkbridge.NewPluginStarlark(p), nil
+		},
+	)
 	return &starlarkstruct.Module{
 		Name: "eeaao_codegen",
 		Members: starlark.StringDict{
@@ -155,6 +178,7 @@ func ToStarlarkModule(h HelperFuncs) *starlarkstruct.Module {
 			"loadSpecsGlob": loadSpecsGlob,
 			"renderFile":    renderFile,
 			"loadValues":    loadValues,
+			"getPlugin":     getPlugin,
 		},
 	}
 }

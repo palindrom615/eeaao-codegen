@@ -63,6 +63,10 @@ func (a *App) LoadValues() map[string]any {
 	return a.Values
 }
 
+func (a *App) GetPlugin(pluginName string) plugin.Plugin {
+	return a.plugins.GetPlugin(pluginName)
+}
+
 func (a *App) Include(templatePath string, data interface{}) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	if err := a.tmpl.ExecuteTemplate(buf, templatePath, data); err != nil {
