@@ -44,8 +44,6 @@ public class GenerateEeaaoTask extends Exec {
 
     private void setEeaaoCodegenArgs() {
         args(
-                "--specdir",
-                options.getSpecDir(),
                 "--codeletdir",
                 options.getCodeletDir(),
                 "--outdir",

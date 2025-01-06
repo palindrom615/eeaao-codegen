@@ -36,7 +36,7 @@ Assume you have openAPI specs in the `openapi` directory, a codelet defined in t
 you want to generate code in the `__generated__` directory.
 
 ```
-eeaao-codegen-cli --specdir=./openapi --codeletdir=./codelet --outputdir=./__generated__
+eeaao-codegen-cli --codeletdir=./codelet --outputdir=./__generated__
 ```
 
 ## Codelet
@@ -84,7 +84,7 @@ def main():
   eeaao_codegen.renderFile("petstoreApi.js", "Api.js.tmpl", spec)
 ```
 
-The codelet above loads `{specdir}/petstore.yaml` file, reads template file
+The codelet above loads `../spec/petstore.yaml` file, reads template file
 `{codeletdir}/templates/Api.js.tmpl`, and
 renders the template with loaded spec data. The rendered file will be saved as `{outputdir}/petstoreApi.js`.
 

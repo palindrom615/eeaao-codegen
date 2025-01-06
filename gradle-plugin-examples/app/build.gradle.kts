@@ -46,14 +46,12 @@ tasks.named<Test>("test") {
 }
 
 eeaaoCodegen {
-    specDir = "src/main/resources/spec"
     codeletDir = "src/main/resources/codelet"
     outDir = "build/__generated__/java"
 }
 
 tasks.register<GenerateEeaaoTask>("AnotherCodegenTask") {
     eeaaoCodegen {
-        specDir = "src/main/resources/spec"
         codeletDir = "src/main/resources/anotherCodelet"
         outDir = "build/__generated__/java"
     }

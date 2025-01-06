@@ -6,7 +6,7 @@ openapi-generator generate -i ../spec/petstore.json -g kotlin-spring -o build-ex
 
 
 ```bash
-go run github.com/palindrom615/eeaao-codegen/cmd/eeaao-codegen-cli --codeletdir ./codelet --outdir build --specdir ../spec
+go run github.com/palindrom615/eeaao-codegen/cmd/eeaao-codegen-cli --codeletdir ./codelet --outdir build
 ```
 ```bash
 diff build build-expected

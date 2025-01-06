@@ -13,7 +13,6 @@ import (
 )
 
 type App struct {
-	specDir        string
 	OutDir         string
 	CodeletDir     string
 	Values         map[string]any
@@ -23,13 +22,11 @@ type App struct {
 }
 
 // NewApp creates a new App instance
-// specDir: directory for specifications
 // outDir: directory for output
 // codeletDir: directory for codelet
 // valuesFile: file path of external values file. if empty, it will be ignored.
-func NewApp(specDir string, outDir string, codeletDir string, valuesFile string) *App {
+func NewApp(outDir string, codeletDir string, valuesFile string) *App {
 	a := &App{
-		specDir:    specDir,
 		OutDir:     outDir,
 		CodeletDir: codeletDir,
 		plugins:    plugin.NewPlugins(),

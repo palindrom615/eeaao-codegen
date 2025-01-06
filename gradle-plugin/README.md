@@ -26,7 +26,6 @@ By default the plugin register a task named `eeaaoCodegen`. You can configure th
 
 ```kotlin
 eeaaoCodegen {
-    specDir = "src/main/resources/spec"
     codeletDir = "src/main/resources/codelet"
     outDir = "src/__generated__/java"
 }
@@ -36,7 +35,6 @@ internally, each of the option is mapped to a command line argument. The followi
 
 | Option | Command Line Argument | Description |
 |--------|--------------------|-------------|
-| `specDir` | `--specdir` | The directory containing the specification files. |
 | `codeletDir` | `--codeletdir` | The directory containing the codelet files. |
 | `outDir` | `--outdir` | The directory where the generated code will be written. |
 
@@ -78,7 +76,6 @@ Instead of built-in task registered by the plugin itself, you can register addit
 ```kotlin
 tasks.register<GenerateEeaaoTask>("AnotherCodegenTask") {
     eeaaoCodegen {
-        specDir = "src/main/resources/spec"
         codeletDir = "src/main/resources/anotherCodelet"
         outDir = "src/generated/kotlin"
     }
