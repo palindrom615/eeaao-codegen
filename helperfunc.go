@@ -90,7 +90,7 @@ func ToStarlarkModule(app *App) *starlarkstruct.Module {
 				}
 				return templateFunc.CallInternal(thread, args, nil)
 			}
-			app.tmpl.Funcs(template.FuncMap{name.GoString(): tmplFunc})
+			app.tmpl.AddTemplateFunc(name.GoString(), tmplFunc)
 			return starlark.None, nil
 		},
 	)
