@@ -13,6 +13,7 @@ import (
 //   - renderFile(filePath: str, templatePath: str, data: any) -> str
 //   - loadValues() -> dict[str, any]
 //   - getPlugin(pluginName: str) -> EeaaoPlugin
+//   - addTemplateFunc(fnName: str, f: func(...any) (any, error)) -> None
 //
 // due to the limitation of interoperability between Go and Starlark, JSON encoding is used internally.
 //
@@ -68,12 +69,38 @@ func ToStarlarkModule(app *App) *starlarkstruct.Module {
 			return starlarkbridge.ConvertToStarlarkValue(thread, app.LoadValues())
 		},
 	)
+	addTemplateFunc := starlark.NewBuiltin(
+		"addTemplateFunc",
+		func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+			var (
+				name         starlark.String
+				templateFunc starlark.Callable
+			)
+			if err := starlark.UnpackArgs("addTemplateFunc", args, kwargs, "name", name, "f", &templateFunc); err != nil {
+				return nil, err
+			}
+			tmplFunc := func(v ...any) (any, error) {
+				args := make(starlark.Tuple, len(v))
+				for i, arg := range v {
+					var err error
+					args[i], err = convertToStarlarkValue(thread, arg)
+					if err != nil {
+						return nil, err
+					}
+				}
+				return templateFunc.CallInternal(thread, args, nil)
+			}
+			app.tmpl.Funcs(template.FuncMap{name.GoString(): tmplFunc})
+			return starlark.None, nil
+		},
+	)
 	return &starlarkstruct.Module{
 		Name: "eeaao_codegen",
 		Members: starlark.StringDict{
-			"renderFile": renderFile,
-			"loadValues": loadValues,
-			"getPlugin":  getPlugin,
+			"renderFile":      renderFile,
+			"loadValues":      loadValues,
+			"getPlugin":       getPlugin,
+			"addTemplateFunc": addTemplateFunc,
 		},
 	}
 }
