@@ -9,6 +9,13 @@ type OpenApiPlugin struct {
 	yamlPlugin *YamlPlugin
 }
 
+func NewOpenApiPlugin() *OpenApiPlugin {
+	return &OpenApiPlugin{
+		jsonPlugin: NewJsonPlugin(),
+		yamlPlugin: NewYamlPlugin(),
+	}
+}
+
 func (o *OpenApiPlugin) Name() string {
 	return "openapi"
 }

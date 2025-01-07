@@ -11,7 +11,7 @@ type pluginsImpl struct {
 
 func NewPlugins() Plugins {
 	m := make(map[string]Plugin)
-	m["openapi"] = &OpenApiPlugin{}
+	m["openapi"] = NewOpenApiPlugin()
 	m["json"] = NewJsonPlugin()
 	m["yaml"] = NewYamlPlugin()
 	m["proto"] = NewProtobufPlugin()
