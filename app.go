@@ -3,6 +3,7 @@ package eeaao_codegen
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/palindrom615/eeaao-codegen/plugin"
 	"gopkg.in/yaml.v3"
 	"log"
@@ -132,19 +133,16 @@ func (a *App) populateTemplate() {
 // returns the destination file path.
 func (a *App) RenderFile(filePath string, templatePath string, data any) (dst string, err error) {
 	if !filepath.IsLocal(filePath) {
-		log.Printf("invalid filePath: %s", filePath)
-		return "", nil
+		return "", fmt.Errorf("invalid filePath: %s", filePath)
 	}
 	if !filepath.IsLocal(templatePath) {
-		log.Printf("invalid templatePath: %s", templatePath)
-		return "", nil
+		return "", fmt.Errorf("invalid templatePath: %s", templatePath)
 	}
 	dst = filepath.Join(a.OutDir, filePath)
 	os.MkdirAll(filepath.Dir(dst), os.ModePerm)
 	dstFile, err := os.Create(dst)
 	if err != nil {
-		log.Printf("Error creating file '%s': %v\n", dst, err)
-		return "", err
+		return "", fmt.Errorf("error creating file '%s': %w", dst, err)
 	}
 	err = a.tmpl.ExecuteTemplate(dstFile, templatePath, data)
 	if err != nil {
