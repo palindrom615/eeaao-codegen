@@ -1,7 +1,6 @@
 package eeaao_codegen
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/palindrom615/eeaao-codegen/plugin"
@@ -17,7 +16,7 @@ type App struct {
 	OutDir         string
 	CodeletDir     string
 	Values         map[string]any
-	tmpl           *template.Template
+	tmpl           *Template
 	starlarkRunner *starlarkRunner
 	plugins        plugin.Plugins
 }
@@ -34,7 +33,7 @@ func NewApp(outDir string, codeletDir string, valuesFile string) *App {
 	}
 	a.loadValues(valuesFile)
 
-	a.populateTemplate()
+	a.tmpl = NewTemplate(filepath.Join(a.CodeletDir, "templates"), toTemplateFuncmap(a))
 	runner, err := newStarlarkRunner(codeletDir, ToStarlarkModule(a))
 	if err != nil {
 		log.Fatalf("Error creating starlark runner: %v\n", err)
@@ -98,34 +97,6 @@ func (a *App) RunShell() {
 	a.starlarkRunner.RunShell()
 }
 
-func (a *App) populateTemplate() {
-	a.tmpl = template.New("root")
-	a.tmpl.Funcs(ToTemplateFuncmap(a))
-	tmplDir := filepath.Join(a.CodeletDir, "templates")
-	if stat, err := os.Stat(tmplDir); err != nil || !stat.IsDir() {
-		log.Printf("Failed to find templates directory [%s]\n", tmplDir)
-		return
-	}
-
-	filepath.Walk(tmplDir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-		tmplName, _ := filepath.Rel(tmplDir, path)
-		tmplText, err := os.ReadFile(path)
-		if err != nil {
-			log.Printf("Failed reading template file [%s]. skipped\n%v\n", path, err)
-			return nil
-		}
-		_, err = a.tmpl.New(tmplName).Parse(string(tmplText))
-		if err != nil {
-			log.Printf("Failed parsing template file [%s]; skipped\n%v\n", path, err)
-			return nil
-		}
-		return nil
-	})
-}
-
 // RenderFile renders a file with the given template and data
 // filePath: the file path to render. The path is relative to the output directory.
 // templatePath: the template path. The path is relative to the ${codeletdir}/templates directory.
@@ -138,6 +109,7 @@ func (a *App) RenderFile(filePath string, templatePath string, data any) (dst st
 	if !filepath.IsLocal(templatePath) {
 		return "", fmt.Errorf("invalid templatePath: %s", templatePath)
 	}
+
 	dst = filepath.Join(a.OutDir, filePath)
 	os.MkdirAll(filepath.Dir(dst), os.ModePerm)
 	dstFile, err := os.Create(dst)
@@ -161,15 +133,19 @@ func (a *App) GetPlugin(pluginName string) plugin.Plugin {
 	return a.plugins.GetPlugin(pluginName)
 }
 
-// Include renders a template with the given data.
+// toTemplateFuncmap converts the helper functions into a template.FuncMap
+// for use with template.
 //
-// Drop-in replacement for template pipeline, but with a string return value so that it can be treated as a string in the template.
+// The resulting FuncMap includes the following functions:
+//   - renderFile: App.RenderFile
+//   - loadValues: App.LoadValues
+//   - getPlugin: App.GetPlugin
 //
-// Inspired by [helm include function](https://helm.sh/docs/chart_template_guide/named_templates/#the-include-function)
-func (a *App) Include(templatePath string, data interface{}) (string, error) {
-	buf := bytes.NewBuffer(nil)
-	if err := a.tmpl.ExecuteTemplate(buf, templatePath, data); err != nil {
-		return "", err
+// Additionally, it incorporates the sprig.FuncMap for extended functionality.
+func toTemplateFuncmap(a *App) template.FuncMap {
+	return template.FuncMap{
+		"renderFile": a.RenderFile,
+		"loadValues": a.LoadValues,
+		"getPlugin":  a.GetPlugin,
 	}
-	return buf.String(), nil
 }

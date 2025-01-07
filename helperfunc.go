@@ -1,35 +1,11 @@
 package eeaao_codegen
 
 import (
-	"github.com/Masterminds/sprig"
 	"github.com/palindrom615/eeaao-codegen/starlarkbridge"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 	"log"
-	"maps"
-	"text/template"
 )
-
-// ToTemplateFuncmap converts the helper functions into a template.FuncMap
-// for use with template.
-//
-// The resulting FuncMap includes the following functions:
-//   - renderFile: App.RenderFile
-//   - loadValues: App.LoadValues
-//   - include: App.Include
-//   - getPlugin: App.GetPlugin
-//
-// Additionally, it incorporates the sprig.FuncMap for extended functionality.
-func ToTemplateFuncmap(a *App) template.FuncMap {
-	funcmap := template.FuncMap{
-		"renderFile": a.RenderFile,
-		"loadValues": a.LoadValues,
-		"include":    a.Include,
-		"getPlugin":  a.GetPlugin,
-	}
-	maps.Copy(funcmap, sprig.FuncMap())
-	return funcmap
-}
 
 // ToStarlarkModule exposes the App's functions to starlarkstruct.Module.
 //
