@@ -10,7 +10,7 @@ import (
 // ConvertToStarlarkValue converts any value to starlark.Value
 //
 // Internally the value is serialized in go and then deserialized in starlark.
-// JSON is used for serialization. so the value should be serializable to JSON.
+// JSON is used for serialization. so any properties that are not serializable to JSON will be lost.
 func ConvertToStarlarkValue(thread *starlark.Thread, value any) (starlark.Value, error) {
 	specStr, err := json.Marshal(value)
 	if err != nil {
@@ -19,7 +19,31 @@ func ConvertToStarlarkValue(thread *starlark.Thread, value any) (starlark.Value,
 	return decodeWithStarlarkJson(thread, starlark.String(specStr))
 }
 
-func ConvertFromStarlarkValue(thread *starlark.Thread, value starlark.Value) (map[string]any, error) {
+// ConvertFromStarlarkValue converts starlark.Value to any value
+//
+// As ConvertToStarlarkValue, the value is serialized in go and then deserialized in starlark.
+// JSON is used for serialization. so any properties that are not serializable to JSON will be lost.
+func ConvertFromStarlarkValue(thread *starlark.Thread, value starlark.Value) (any, error) {
+	switch t := value.(type) {
+	case starlark.String:
+		return t.GoString(), nil
+	case starlark.Bool:
+		return bool(t), nil
+	case starlark.Int:
+		i32, err := starlark.AsInt32(t)
+		if err == nil {
+			return i32, nil
+		}
+		i64, ok := t.Int64()
+		if ok {
+			return i64, nil
+		}
+		return t.BigInt(), nil
+	case starlark.Float:
+		return float64(t), nil
+	case starlark.NoneType:
+		return nil, nil
+	}
 	encoded, err := encodeWithStarlarkJson(thread, value)
 	if err != nil {
 		return nil, err

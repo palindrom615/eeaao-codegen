@@ -92,7 +92,11 @@ func (m *EeaaoStarlarkModule) addTemplateFunc(thread *starlark.Thread, fn *starl
 			}
 		}
 
-		return starlark.Call(thread, templateFunc, args, kwargs)
+		res, err := starlark.Call(thread, templateFunc, args, kwargs)
+		if err != nil {
+			return nil, err
+		}
+		return starlarkbridge.ConvertFromStarlarkValue(thread, res)
 	}
 	m.app.tmpl.AddTemplateFunc(name.GoString(), tmplFunc)
 	return starlark.None, nil
