@@ -64,6 +64,7 @@ that you can use in `render.star`:
 | `getPlugin(pluginName: str): EeaaoPlugin`                             | load plugin of given name and return loaded plugin                                                   |
 | `renderFile(filePath: str, templatePath: str, data: Any): str`        | render `templates/{templatePath}` file with given `data` on `filePath` and return rendered file path |
 | `loadValues(filePaths: List[str], templatePath: str, data: Any): Any` | load `values.json` and return loaded value                                                           |
+| `addTemplateFunc(name: str, func: Callable)`                          | add custom template function                                                                        |
 
 `EeaaoPlugin` is an interface that defines below functions:
 
