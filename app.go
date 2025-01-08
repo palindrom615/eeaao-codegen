@@ -34,7 +34,7 @@ func NewApp(outDir string, codeletDir string, valuesFile string) *App {
 	a.loadValues(valuesFile)
 
 	a.tmpl = NewTemplate(filepath.Join(a.CodeletDir, "templates"), toTemplateFuncmap(a))
-	runner, err := newStarlarkRunner(codeletDir, ToStarlarkModule(a))
+	runner, err := newStarlarkRunner(codeletDir, NewEeaaoStarlarkModule(a).Module)
 	if err != nil {
 		log.Fatalf("Error creating starlark runner: %v\n", err)
 	}
