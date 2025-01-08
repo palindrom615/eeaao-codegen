@@ -7,11 +7,11 @@ import (
 	"log"
 )
 
-// convertToStarlarkValue converts any value to starlark.Value
+// ConvertToStarlarkValue converts any value to starlark.Value
 //
 // Internally the value is serialized in go and then deserialized in starlark.
 // JSON is used for serialization. so the value should be serializable to JSON.
-func convertToStarlarkValue(thread *starlark.Thread, value any) (starlark.Value, error) {
+func ConvertToStarlarkValue(thread *starlark.Thread, value any) (starlark.Value, error) {
 	specStr, err := json.Marshal(value)
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func convertToStarlarkValue(thread *starlark.Thread, value any) (starlark.Value,
 	return decodeWithStarlarkJson(thread, starlark.String(specStr))
 }
 
-func convertFromStarlarkValue(thread *starlark.Thread, value starlark.Value) (map[string]any, error) {
+func ConvertFromStarlarkValue(thread *starlark.Thread, value starlark.Value) (map[string]any, error) {
 	encoded, err := encodeWithStarlarkJson(thread, value)
 	if err != nil {
 		return nil, err

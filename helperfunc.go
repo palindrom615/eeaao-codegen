@@ -1,11 +1,8 @@
-// Package codelet declares the exposed functions for go/template and starlark built-ins.
 package eeaao_codegen
 
 import (
-	"encoding/json"
 	"github.com/Masterminds/sprig"
 	"github.com/palindrom615/eeaao-codegen/starlarkbridge"
-	json2 "go.starlark.net/lib/json"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 	"log"
@@ -57,7 +54,7 @@ func ToStarlarkModule(app *App) *starlarkstruct.Module {
 			if err := starlark.UnpackArgs("renderFile", args, kwargs, "filePath", &filePath, "templatePath", &templatePath, "data", &data); err != nil {
 				return nil, err
 			}
-			d, err := convertFromStarlarkValue(thread, data)
+			d, err := starlarkbridge.ConvertFromStarlarkValue(thread, data)
 			if err != nil {
 				log.Printf("Error decoding starlark injected data: %v\n%v\n", data, err)
 				return nil, err
@@ -92,7 +89,7 @@ func ToStarlarkModule(app *App) *starlarkstruct.Module {
 			if err := starlark.UnpackArgs("loadValues", args, kwargs); err != nil {
 				return nil, err
 			}
-			return convertToStarlarkValue(thread, app.LoadValues())
+			return starlarkbridge.ConvertToStarlarkValue(thread, app.LoadValues())
 		},
 	)
 	return &starlarkstruct.Module{
@@ -103,36 +100,4 @@ func ToStarlarkModule(app *App) *starlarkstruct.Module {
 			"getPlugin":  getPlugin,
 		},
 	}
-}
-
-func convertToStarlarkValue(thread *starlark.Thread, value any) (starlark.Value, error) {
-	specStr, err := json.Marshal(value)
-	if err != nil {
-		return nil, err
-	}
-	return decodeWithStarlarkJson(thread, starlark.String(specStr))
-}
-
-func convertFromStarlarkValue(thread *starlark.Thread, value starlark.Value) (map[string]any, error) {
-	encoded, err := encodeWithStarlarkJson(thread, value)
-	if err != nil {
-		return nil, err
-	}
-	d := make(map[string]any)
-	err = json.Unmarshal([]byte(encoded.(starlark.String)), &d)
-	if err != nil {
-		log.Printf("Error decoding starlark injected data: %v\n%v\n", encoded, err)
-		return nil, err
-	}
-	return d, nil
-}
-
-func decodeWithStarlarkJson(thread *starlark.Thread, value starlark.Value) (starlark.Value, error) {
-	decode := json2.Module.Members["decode"].(*starlark.Builtin)
-	return starlark.Call(thread, decode, starlark.Tuple{value}, nil)
-}
-
-func encodeWithStarlarkJson(thread *starlark.Thread, value starlark.Value) (starlark.Value, error) {
-	encode := json2.Module.Members["encode"].(*starlark.Builtin)
-	return starlark.Call(thread, encode, starlark.Tuple{value}, nil)
 }

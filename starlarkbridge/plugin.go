@@ -27,7 +27,7 @@ func NewPluginStarlark(plugin plugin.Plugin) starlark.HasAttrs {
 			if err != nil {
 				return nil, err
 			}
-			return convertToStarlarkValue(thread, spec)
+			return ConvertToStarlarkValue(thread, spec)
 		},
 	}
 	loadSpecUrl := &pluginMethodStarlark{
@@ -44,7 +44,7 @@ func NewPluginStarlark(plugin plugin.Plugin) starlark.HasAttrs {
 			if err != nil {
 				return nil, err
 			}
-			return convertToStarlarkValue(thread, spec)
+			return ConvertToStarlarkValue(thread, spec)
 		},
 	}
 	return &pluginStarlark{
