@@ -1,15 +1,25 @@
-package eeaao_codegen_test
+package eeaao_codegen
 
 import (
-	"github.com/palindrom615/eeaao-codegen"
 	"testing"
 )
 
 func TestRender(t *testing.T) {
-	a := eeaao_codegen.NewApp(
+	a := NewApp(
 		"./example/openapi-v3/kotlin-spring/build",
 		"./example/openapi-v3/kotlin-spring/codelet",
-		"./example/openapi-v3/kotlin-spring/values.yaml",
+		"",
 	)
 	a.Render()
+}
+
+func TestTemplate_Include(t *testing.T) {
+	app := NewApp("test/out", "test/addTemplateFunc", "")
+	rendered, err := app.tmpl.Include("add.tmpl", "test/addTemplateFunc/add.star")
+	if err != nil {
+		t.Errorf("Error rendering template: %v", err)
+	}
+	if rendered != "1 + 1 = 2" {
+		t.Errorf("Expected `1 + 1 = 2`, got %s", rendered)
+	}
 }
